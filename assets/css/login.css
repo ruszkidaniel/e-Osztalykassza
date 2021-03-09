@@ -1,31 +1,144 @@
-.login-wrapper {
+.guest-wrapper {
   height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.login-container {
-  background-color: rgba(255, 255, 255, 0.4);
-  color: #222;
-  border-radius: 20px;
+.guest-container {
+  background-color: rgba(0, 0, 0, 0.4);
+  color: #ddd;
+  border-radius: 10px;
   padding: 20px;
+  box-shadow: 5px 5px 5px #222;
+  max-width: 500px;
 }
-.login-container h1 {
+.guest-container form {
+  width: 100%;
+  color: #fff;
+  padding: 15px;
+  font-size: 14pt;
+  margin: 0 auto;
+  border-radius: 10px;
+}
+.guest-container h1 {
   font-size: 24pt;
   text-align: center;
   padding: 0.5em 0;
 }
-.login-container p {
+.guest-container h4 {
   text-align: center;
+  font-weight: normal;
   padding: 1em;
 }
-.login-container label {
+.guest-container p {
+  text-align: justify;
+  padding: 1em;
+}
+.guest-container label {
+  color: #aaa;
   display: block;
   padding: 0.5em;
+  line-height: 2em;
 }
-.login-container input {
+.guest-container select,
+.guest-container input {
   padding: 5px;
+  font-size: 14pt;
+  border-radius: 5px;
+  border: 0;
+  width: 100%;
+  background-color: rgba(0, 0, 0, 0.3);
+  color: #aaa;
+  outline: none;
+}
+.guest-container input.btn {
+  width: auto;
+}
+.guest-container select:hover,
+.guest-container select:focus,
+.guest-container input:focus,
+.guest-container input:hover {
+  color: #fff;
+}
+.guest-container hr {
+  border-color: #666;
+}
+.guest-container .forgotpw {
+  color: #00c8ff;
+  font-size: 13pt;
+}
+.guest-container .forgotpw:hover {
+  color: #00faff;
+}
+.guest-container ul {
+  padding: 0 20px 0 50px;
 }
 
+.guest-container.login a.btn,
+.guest-container.login input[type=submit] {
+  width: 50%;
+  display: block;
+  background-color: rgba(0, 0, 0, 0.5);
+  color: #aaa;
+  margin: 0 auto;
+}
+.guest-container.login input.btn:hover,
+.guest-container.login .btn:hover {
+  color: #fff;
+  background: rgba(0, 0, 0, 0.8);
+  cursor: pointer;
+  text-decoration: none;
+  transition: 0.3s;
+}
+.guest-container.login form {
+  max-width: 400px;
+}
+
+.guest-container.register {
+  max-width: 800px;
+  flex-shrink: 0;
+  flex-grow: 1;
+}
+.guest-container.register .register-form {
+  display: flex;
+  justify-content: space-between;
+}
+.guest-container.register .register-form div {
+  width: 50%;
+  padding: 0 20px;
+}
+.guest-container.register label small {
+  line-height: 1em;
+  display: block;
+  color: #666;
+}
+.guest-container.register label:hover,
+.guest-container.register label:hover > small {
+  color: #fff;
+  transition: 0.5s;
+}
+.guest-container.register label:hover > input {
+  background-color: rgba(0, 0, 0, 0.4);
+  transition: 0.3s;
+}
+.guest-container.register select option {
+  background-color: #222;
+}
+.guest-container.register p#response {
+  padding: 10px;
+  background: rgba(0,0,0,0.3);
+  border-radius: 10px;
+  text-align: center;
+}
+.guest-container.register p.failure {
+  color: #f00;
+}
+.guest-container.register p.success {
+  color: #0f0;
+}
+.guest-container p.info {
+  font-size: 12pt;
+  color: #ddd;
+}
 /*# sourceMappingURL=login.css.map */
