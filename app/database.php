@@ -1,11 +1,9 @@
 <?php
 
-    include_once('class/Database.php');
-
-    $host = 'localhost';
-    $user = 'root';
+    $host = '';
+    $user = '';
     $pass = '';
-    $dbname = 'eosztalykassza';
+    $dbname = '';
 
     try {
         $db = new Database($host, $user, $pass, $dbname);

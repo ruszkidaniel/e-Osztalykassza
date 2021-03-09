@@ -3,7 +3,7 @@
     /**
      * This class represents a group of users.
      */
-    class Class {
+    class Classroom {
         
         public $id, $schoolID, $name;
 
