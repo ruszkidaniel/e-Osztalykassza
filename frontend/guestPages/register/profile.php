@@ -4,11 +4,15 @@
         redirect_to_url('/register/verify');
     }
 
-    $url = 'otpauth://totp/e-Osztálykassza: '. $_SESSION['REGISTER_DATA']['UserName'] .'?secret=A2CDEF5HIJKLMNOP&issuer=e-Osztálykassza';
-    $qrcode = 'https://chart.googleapis.com/chart?chs=200x200&chld=M|0&cht=qr&chl=' . urlencode($url);
+    if($_SERVER['REQUEST_METHOD'] == 'POST') {
+        call_local_api('register', 'profile');
+    }
+
+    $url = '/api/qrcode?url=' . urlencode('otpauth://totp/e-Osztálykassza:'. str_replace('/\s/','_',$_SESSION['REGISTER_DATA']['UserName']) .'?secret='. $_SESSION['REGISTER_DATA']['2FA'] .'&issuer=e-Osztálykassza');
+
 ?>
-<h3>Beállítások</h3>
-<form action="/register/user" method="POST" autocomplete="off">
+<h1>Beállítások</h1>
+<form action="/register/profile" method="POST" autocomplete="off">
     <div class="register-form">
         <div>
             <label for="2fa">
@@ -22,11 +26,39 @@
             </label>
             <label for="dob">
                 Születési dátum beállítása
-                <input type="date" id="dob" name="dob">
+                <input type="date" id="dob" name="dob" required>
+            </label>
+            <label for="dobhidden">
+                Elrejtés más felhasználók elől:
+                <small>Az osztály készítője minden esetben láthatja.</small>
+                <input type="checkbox" name="dobhidden" id="dobhidden">
             </label>
         </div>
         <div>
-            <img src="" alt="">
+            <p class="text-center">Kétfaktoros hitelesítés QR kód</p>
+            <img src="<?=$url?>" class="img-center" alt="Két faktoros hitelesítő QR kód"><br>
+            <input type="text" name="Code" placeholder="Kód az alkalmazásból:">
         </div>
     </div>
+    <p class="info">Amennyiben aktiválni szeretné a két faktoros hitelesítést, töltse le Androidos okostelefonjára a <a href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2&hl=hu&gl=US" target="_blank">Google Hitelesítő</a> alkalmazást.<br>
+    Ha a kép nem jelenik meg, vagy hibás, írja be manuálisan az alábbi kódot: <strong><?=$_SESSION['REGISTER_DATA']['2FA']?></strong></p>
+    <p class="info">Ha nem szeretné bekapcsolni, akkor válassza a <strong>Kikapcsolás</strong> opciót, és ne töltse ki a kép alatti szövegdobozt.</p>
+    <p class="text-center"><button class="btn text-center">Regisztráció befejezése</button></p>
+    <?php
+        if(isset($api_response)) {
+            if($api_response['success']) {
+                $_SESSION['REGISTER_SUCCESS'] = true;
+                unset($_SESSION['REGISTER_DATA']);
+                redirect_to_url('/login');
+            } else {
+                $errors = [
+                    'invalid_dob_format' => 'Hibás formátumú születési dátum.',
+                    'wrong_2fa_code' => 'Hibás kódot adott meg.',
+                    '2fa_not_provided' => 'Nem adott meg kódot, de bekapcsolta a két faktoros hitelesítést.'
+                ];
+
+                echo '<p id="response" class="failure">'. (array_key_exists($api_response['error'], $errors) ? $errors[$api_response['error']] : 'Ismeretlen hiba történt' ) .'</p>';
+            }
+        }
+        ?>
 </form>

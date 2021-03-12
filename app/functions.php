@@ -2,7 +2,7 @@
 
     function isLogged() {
         global $cookieHandler;
-        return $cookieHandler->Check() && isset($_SESSION['UserID']);
+        return $cookieHandler->Check() && isset($_SESSION['UserID']) && !isset($_SESSION['NEED_2FA']);
     }
 
     function random_characters($len) {
@@ -31,7 +31,7 @@
     }
 
     function call_local_api($path, $data = false) {
-        global $cookieHandler, $pageConfig, $dataManager;
+        global $cookieHandler, $pageConfig, $dataManager, $twoFactorAuthenticator;
         define('INCLUDED_API_PATH', ['api', $path]);
         $api_data = $data;
         require_once('./app/api/main.php');

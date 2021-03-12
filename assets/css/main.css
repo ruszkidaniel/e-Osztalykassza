@@ -78,4 +78,9 @@ div.cookiebox .accept:hover {
   background-color: rgba(0, 0, 255, 0.3);
 }
 
+.img-center {
+  display: block;
+  margin: 0 auto;
+}
+
 /*# sourceMappingURL=main.css.map */

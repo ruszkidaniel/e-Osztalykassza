@@ -125,16 +125,16 @@
 .guest-container.register select option {
   background-color: #222;
 }
-.guest-container.register p#response {
+.guest-container p#response {
   padding: 10px;
   background: rgba(0,0,0,0.3);
   border-radius: 10px;
   text-align: center;
 }
-.guest-container.register p.failure {
+.guest-container p.failure {
   color: #f00;
 }
-.guest-container.register p.success {
+.guest-container p.success {
   color: #0f0;
 }
 .guest-container p.info {

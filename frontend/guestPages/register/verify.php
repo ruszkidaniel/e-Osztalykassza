@@ -1,5 +1,5 @@
 <?php
-
+/*
     $_SESSION['REGISTER_DATA'] = [
         'UserID' => '18',
         'UserName' => 'ruszki.daniel',
@@ -10,7 +10,11 @@
     if(!isset($_SESSION['REGISTER_DATA'])) {
         
         redirect_to_url('/register');
-        
+
+    } elseif(isset($_SESSION['REGISTER_DATA']['2FA'])) {
+
+        redirect_to_url('/register/profile');
+
     }
 
     $code = $dataManager->FindVerificationCode($_SESSION['REGISTER_DATA']['UserID'], 'email');
@@ -20,7 +24,7 @@
         
         $success = ($code['Code'] == $path[2]);
 
-        echo '<p class="'.($success?'success':'failure').'">'.
+        echo '<p id="response" class="'.($success?'success':'failure').'">'.
             ($success?'Emailcíme sikeresen megerősítve! Kattintson a gombra folytatáshoz!':'Hiba történt az aktiválás során, a kód nem megfelelő.').
             '</p>';
         
@@ -30,10 +34,7 @@
             
             $dataManager->DeleteVerificationCode($code['Code']);
 
-            echo '<div class="flex-spread">
-            <div></div>
-            <a href="/register/profile" class="btn">Tovább</a>
-            </div>';
+            echo '<div class="flex-spread"><div></div><a href="/register/profile" class="btn">Tovább</a></div>';
         }
 
     } else {

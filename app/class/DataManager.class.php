@@ -60,10 +60,11 @@
         function GetLoginData($username) {
             
             $result = $this->db->query(
-                'SELECT UserID, GlobalPermissions, AccountType, Password, PasswordSalt, COUNT(FailedLogins.LoginID) as FailedCount 
-                FROM Users NATURAL JOIN FailedLogins 
-                WHERE UserName = ? AND FailedLogins.Date >= date_sub(NOW(), interval 1 hour)',
-                [ $username ]
+                'SELECT UserID, GlobalPermissions, AccountType, Password, PasswordSalt, 2FA, 2FAType, 
+                (SELECT COUNT(FailedLogins.LoginID) FROM FailedLogins NATURAL LEFT JOIN Users WHERE Users.UserName = ? AND FailedLogins.Date >= date_sub(NOW(), interval 1 hour)) 
+                    as FailedCount
+                FROM Users WHERE UserName = ?',
+                [ $username, $username ]
             )->fetchAll();
 
             if(!$result || count($result) == 0)
@@ -82,7 +83,7 @@
 
             $this->db->query(
                 'INSERT INTO FailedLogins (UserID, SessionID, Date) VALUES (?,?,NOW())',
-                [ $userid, $this->sessionHandler->GetSessionDBID() ]
+                [ $userid, session_id() ]
             );
 
         }
@@ -199,6 +200,61 @@
             }
 
             return $result;
+
+        }
+
+        /**
+         * Sets the hidden status of a User's birthdate
+         * 
+         * @param int $userid The ID of the User
+         * @param int $status The updated status of DOBHidden
+         */
+        function SetDOBHidden($userid, $status) {
+
+            return $this->db->query(
+                'UPDATE Users SET DOBHidden = ? WHERE UserID = ?',
+                [ $status, $userid ],
+                false
+            );
+
+        }
+
+        /**
+         * Sets the birthdate of a User
+         * 
+         * @param int $userid The ID of the User
+         * @param string $date The birthday of the User (format: YYYY-MM-DD)
+         * 
+         * @return boolean
+         */
+        function SetDOB($userid, $date) {
+
+            return $this->db->query(
+                'UPDATE Users SET DOB = ? WHERE UserID = ?',
+                [ $date, $userid ],
+                false
+            );
+
+        }
+
+        function SetGlobalPermissions($userid, $perms) {
+
+            return $this->db->query(
+                'UPDATE Users SET GlobalPermissions = ? WHERE UserID = ?',
+                [ $perms, $userid ],
+                false
+            );
+
+        }
+
+        function FindUserSessionByIP($userid, $ip) {
+
+            $ipid = $this->AssociateDatabaseValueWithID('IpAddresses', 'IP', 'IPID', $ip);
+
+            return $this->db->query(
+                'SELECT COUNT(*) FROM `Sessions` WHERE `UserID` = ? AND `IPID` = ?',
+                [ $userid, $ipid ]
+            )->fetchColumn();
 
         }
 

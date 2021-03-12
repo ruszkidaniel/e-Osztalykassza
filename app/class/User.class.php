@@ -75,12 +75,30 @@
             ];
         }
 
-        function HandleEmailVerify($data) {
+        function SetupProfile($registerData, $postData, $current2FACode) {
 
-            $_2fa = random_characters(16);
-            $this->dataManager->SetUser2FA($data['UserID'], $_2fa, 0);
+            if(!isset($postData['2fa'], $postData['dob'], $postData['Code']))
+                throw new Exception('data_mismatch');
 
-            $this->LoginUser($data['UserName'], '', true);
+            if(!preg_match('/^\d{4}-\d{2}-\d{2}$/', $postData['dob']))
+                throw new Exception('invalid_dob_format');
+
+            if($postData['2fa'] != 0 && strlen($postData['Code']) == 0)
+                throw new Exception('2fa_not_provided');
+
+            if($postData['2fa'] == 0 && strlen($postData['Code']) != 0)
+                $postData['2fa'] = 1;
+
+            if($postData['2fa'] > 0 && $current2FACode != $postData['Code']) 
+                throw new Exception('wrong_2fa_code');
+
+            $this->dataManager->SetDOB($registerData['UserID'], $_POST['dob']);
+            $this->dataManager->SetGlobalPermissions($registerData['UserID'], 1);
+
+            if(isset($postData['dobhidden']))
+                $this->dataManager->SetDOBHidden($registerData['UserID'], 1);
+
+            return true;
 
         }
 
@@ -89,10 +107,10 @@
             // get user from database
 
             $loginData = $this->dataManager->GetLoginData($username);
-            
+
             // check if user exists
             
-            if(!$loginData)
+            if(!$loginData || is_null($loginData['UserID']))
                 throw new Exception('user_not_found');
             
             // validating data
@@ -104,17 +122,21 @@
                 if($loginData['FailedCount'] >= $this->pageConfig::MAX_LOGIN_ATTEMPTS) 
                     throw new Exception('max_login_attempts_reached');
 
-                $genPass = hash('sha256', hash('sha256', $password . $loginData['PasswordSalt']));
+                $genPass = hash('sha256', hash('sha256', $password) . $loginData['PasswordSalt']);
                 if($genPass != $loginData['Password']) {
-                    $this->dataManager->LogFailedLogin($username);
+                    $this->dataManager->LogFailedLogin($loginData['UserID']);
                     throw new Exception('invalid_password');
                 }
             }
             // logging in
 
-            $_SESSION['UserID'] = $loginData['UserID'];
-            $_SESSION['UserName'] = $username;
-            return true;
+            return [
+                'UserID' => $loginData['UserID'],
+                'UserName' => $username,
+                'GlobalPermissions' => $loginData['GlobalPermissions'],
+                '2FA' => $loginData['2FA'],
+                '2FAType' => $loginData['2FAType']
+            ];
 
         }
 

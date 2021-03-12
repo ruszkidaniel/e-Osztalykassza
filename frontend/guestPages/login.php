@@ -1,13 +1,39 @@
 <?php
-
 if(isset($_SESSION['REGISTER_DATA']))
 	die(header('Location: /register/verify'));
+
+$response = '<p id="response">Jelentkezzen be, ha van már fiókja!</p>';
+if(isset($_SESSION['REGISTER_SUCCESS'])) {
+	unset($_SESSION['REGISTER_SUCCESS']);
+	$response = '<p id="response" class="success">A regisztráció sikeres! Mostmár bejelentkezhet.</p>';
+}
+
+if($_SERVER['REQUEST_METHOD'] == 'POST') {
+	call_local_api('login');
+	if($api_response['success']) {
+		if(isset($_SESSION['NEED_2FA']))
+			redirect_to_url('/login/2fa');
+		else
+			redirect_to_url('/');
+	} else {
+		$errors = [
+			'user_not_found' => 'Nem található felhasználó ilyen névvel.',
+			'permission_error' => 'Nincs jogosultsága bejelentkezni.',
+			'max_login_attempts_reached' => 'Túl sokszor próbált bejelentkezni, ezért ideiglenesen letiltottuk.',
+			'invalid_password' => 'A jelszó nem megfelelő.'
+		];
+
+		$error = $api_response['error'];
+		$response = '<p id="response" class="failure">'. (isset($errors[$error]) ? $errors[$error] : 'Ismeretlen hiba történt.') .'</p>';
+	}
+}
 
 ?>
 
 <h1>Üdvözöljük!</h1>
 <h4>
 	<strong>Az oldal megtekintéséhez be kell jelentkeznie.</strong><br>Ha nincs még felhasználója, készíthet egyet meghívó linkkel, vagy új osztály létrehozásával.</h4>
+<?=$response?>
 <form action="/" method="POST" autocomplete="off">
 	<label for="username">
 		<i class="fas fa-user"></i> Felhasználónév:
