@@ -128,7 +128,6 @@
                     throw new Exception('invalid_password');
                 }
             }
-            // logging in
 
             return [
                 'UserID' => $loginData['UserID'],

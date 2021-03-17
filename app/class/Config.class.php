@@ -25,6 +25,17 @@
 
         const MAX_LOGIN_ATTEMPTS = 5;
         const LOGIN_BAN_INTERVAL = 60;
+        
+        const CLASS_PERMISSIONS = [
+            'MANAGE_MEMBERS', 'MANAGE_PAYS', 'MANAGE_INVITES',
+            'MANAGE_SETTINGS', 'MANAGE_PERMISSIONS', 'MANAGE_REQUESTS',
+            'MANAGE_POSTS'
+        ];
+
+        const GLOBAL_PERMISSIONS = [
+            'LOGIN', 'USE_ADMIN_PAGE', 'VIEW_ALL_CLASSES', 'MODIFY_ALL_CLASSES',
+            'MANAGE_USERS'
+        ];
     }
 
 ?>

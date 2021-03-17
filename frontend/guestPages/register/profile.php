@@ -37,7 +37,7 @@
         <div>
             <p class="text-center">Kétfaktoros hitelesítés QR kód</p>
             <img src="<?=$url?>" class="img-center" alt="Két faktoros hitelesítő QR kód"><br>
-            <input type="text" name="Code" placeholder="Kód az alkalmazásból:">
+            <input type="text" name="Code" pattern="[0-9]{6}" maxlength="6" placeholder="Kód az alkalmazásból:">
         </div>
     </div>
     <p class="info">Amennyiben aktiválni szeretné a két faktoros hitelesítést, töltse le Androidos okostelefonjára a <a href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2&hl=hu&gl=US" target="_blank">Google Hitelesítő</a> alkalmazást.<br>

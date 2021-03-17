@@ -1,6 +1,6 @@
 <?php
     define('EO_project_version', '0.1');
-    
+
     /**
      * PATH Parsing
      * Everything goes into a $path variable
@@ -23,7 +23,7 @@
     foreach($classes as $class) {
         require_once($class);
     }
-
+    
     /**
      * Loading page
      */
@@ -40,4 +40,4 @@
     require_once('./app/functions.php');
 
     require_once('./app/main.php');
-    // todo: title, egyéni jogosultságokkal elérhető fájlok inklúdálásának beállítása
+    

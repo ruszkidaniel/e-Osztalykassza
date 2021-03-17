@@ -12,6 +12,13 @@
             session_unset();
             $dataManager->StoreSession($session_id, $user_agent, $ip_address);
         } else {
-            $dataManager->UpdateSession($session_id, $user_agent, $ip_address);
+            $userid = null;
+
+            if(isset($_SESSION['UserID'])) 
+                $userid = $_SESSION['UserID'];
+            elseif(isset($_SESSION['REGISTER_DATA'], $_SESSION['REGISTER_DATA']['UserID']))
+                $userid = $_SESSION['REGISTER_DATA']['UserID'];
+
+            $dataManager->UpdateSession($session_id, $user_agent, $ip_address, $userid);
         }
     }

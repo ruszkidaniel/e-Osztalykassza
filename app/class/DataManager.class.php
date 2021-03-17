@@ -247,14 +247,97 @@
 
         }
 
-        function FindUserSessionByIP($userid, $ip) {
+        function FindUserByIP($userid, $ip) {
 
             $ipid = $this->AssociateDatabaseValueWithID('IpAddresses', 'IP', 'IPID', $ip);
 
             return $this->db->query(
-                'SELECT COUNT(*) FROM `Sessions` WHERE `UserID` = ? AND `IPID` = ?',
+                'SELECT COUNT(*) FROM `UserIpTable` WHERE `UserID` = ? AND `IPID` = ?',
                 [ $userid, $ipid ]
             )->fetchColumn();
+
+        }
+
+        function StoreUserIP($userid, $ip) {
+            
+            $ipid = $this->AssociateDatabaseValueWithID('IpAddresses', 'IP', 'IPID', $ip);
+
+            return $this->db->query(
+                'INSERT IGNORE INTO `UserIpTable` (UserID, IPID) VALUES (?, ?)',
+                [ $userid, $ipid ]
+            );
+
+        }
+
+        function DeleteSession($sessionid) {
+
+            return $this->db->query('DELETE FROM `Sessions` WHERE `SessionID` = ?', [$sessionid], false);
+
+        }
+
+        function GetUserProfile($userid) {
+
+            $result = $this->db->query(
+                'SELECT UserName, Email, GlobalPermissions, AccountType, 2FAType, FullName, DOB, DOBHidden FROM Users WHERE UserID = ?', 
+                [$userid]
+            )->fetchAll();
+            
+            if(count($result) > 0)
+                $result = $result[0];
+            else
+                $result = false;
+            
+            return $result;
+
+        }
+
+        function GetUserClassrooms($userid) {
+
+            return $this->db->query(
+                'SELECT ClassID, ClassName FROM Classrooms NATURAL LEFT JOIN UserClassrooms WHERE UserID = ?',
+                [ $userid ]
+            )->fetchAll();
+
+        }
+
+        function GetUserOwnedClasses($userid) {
+
+            return $this->db->query(
+                'SELECT ClassID, ClassName FROM Classrooms WHERE OwnerID = ?',
+                [ $userid ]
+            )->fetchAll();
+
+        }
+
+        function GetSchools() {
+
+            return $this->db->query(
+                'SELECT * FROM Schools ORDER BY SchoolName'
+            )->fetchAll();
+
+        }
+
+        function FindSchool($id, $byId = true) {
+
+            $by = $byId ? 'SchoolID =' : 'SchoolName LIKE';
+
+            return $this->db->query(
+                'SELECT * FROM Schools WHERE '.$by.' ?',
+                [ $id ]
+            )->fetchAll();
+
+        }
+
+        function CreateSchool($schoolName) {
+
+            $id = $this->db->Insert(
+
+                'INSERT INTO Schools (SchoolName) VALUES (?)',
+                [ $schoolName ]
+
+            );
+
+            return $this->FindSchool($id);
 
         }
 
