@@ -6,8 +6,8 @@ class MainPage extends BasePage {
         $this->classes = $this->dataManager->GetUserClassrooms($_SESSION['UserID']);
 
         if(isset($_POST['class'])) {
-            $this->selectClass($_POST['class']);
-            return true;
+            $success = $this->selectClass($_POST['class']);
+            if($success) return true;
         }
 
         $this->classDOM = '';
@@ -57,7 +57,6 @@ class MainPage extends BasePage {
             </form>
         </div>
         <hr>
-        <h3>HÍREK</h3>
         ';
     }
 
@@ -65,7 +64,12 @@ class MainPage extends BasePage {
         if($class == -1)
             redirect_to_url('/new');
 
-        // TODO: többi eset
+        $classInfo = $this->dataManager->GetClassInfo($class);
+        if(!$classInfo || !isset($classInfo['ClassID'], $classInfo['ClassName'], $classInfo['Description']))
+            return false;
+
+        $_SESSION['ClassInfo'] = $classInfo;
+        redirect_to_url('/dashboard');
     }
 
 }

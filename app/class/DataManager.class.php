@@ -294,7 +294,7 @@
         function GetUserClassrooms($userid) {
 
             return $this->db->query(
-                'SELECT ClassID, ClassName FROM Classrooms NATURAL LEFT JOIN UserClassrooms WHERE UserID = ?',
+                'SELECT ClassID, ClassName FROM Classrooms NATURAL LEFT JOIN ClassMembers WHERE UserID = ?',
                 [ $userid ]
             )->fetchAll();
 
@@ -331,13 +331,160 @@
         function CreateSchool($schoolName) {
 
             $id = $this->db->Insert(
-
                 'INSERT INTO Schools (SchoolName) VALUES (?)',
                 [ $schoolName ]
-
             );
 
             return $this->FindSchool($id);
+
+        }
+
+        function GetClassInfo($class) {
+
+            $classInfo = $this->db->query(
+                'SELECT * FROM Classrooms WHERE ClassID = ?',
+                [ $class ]
+            )->fetchAll();
+
+            if(count($classInfo) > 0)
+                $classInfo = $classInfo[0];
+            else
+                $classInfo = false;
+
+            return $classInfo;
+
+        }
+
+        function FindClass($schoolid, $id, $byId = true) {
+
+            $by = $byId ? 'ClassID =' : 'ClassName LIKE';
+    
+            $class = $this->db->query(
+                'SELECT * FROM Classrooms WHERE SchoolID = ? AND '.$by.' ?',
+                [ $schoolid, $id ]
+            )->fetchAll();
+
+            if(count($class) > 0)
+                $class = $class[0];
+            else
+                $class = false;
+            
+            return $class;
+    
+        }
+    
+        function CreateClass($schoolid, $classname, $ownerid, $description) {
+
+            $id = $this->db->Insert(
+                'INSERT INTO Classrooms (OwnerID, SchoolID, ClassName, Description) VALUES (?, ?, ?, ?)',
+                [ $ownerid, $schoolid, $classname, $description ]
+            );
+
+            return $this->FindClass($schoolid, $id);
+    
+        }
+
+        function DeleteClass($classid) {
+
+            $result = $this->db->query(
+                'DELETE FROM Classrooms WHERE ClassID = ?',
+                [ $classid ],
+                false
+            );
+            
+            return $result && $this->db->query(
+                'DELETE FROM ClassGroups WHERE ClassID = ?',
+                [ $classid ],
+                false
+            );
+
+        }
+
+        function AddMemberToClass($userid, $classid) {
+
+            return $this->db->Insert(
+                'INSERT INTO ClassMembers (ClassID, UserID) VALUES (?,?)',
+                [ $classid, $userid ]
+            );
+
+        }
+
+        function FindClassGroup($classid, $id, $byId = true) {
+            
+            $by = $byId ? 'GroupID =' : 'GroupName LIKE';
+    
+            $class = $this->db->query(
+                'SELECT * FROM ClassGroups WHERE ClassID = ? AND '.$by.' ?',
+                [ $classid, $id ]
+            )->fetchAll();
+
+            if(count($class) > 0)
+                $class = $class[0];
+            else
+                $class = false;
+            
+            return $class;
+    
+        }
+        
+        function AddClassGroup($classid, $groupname) {
+
+            $id = $this->db->Insert(
+                'INSERT INTO ClassGroups (ClassID, GroupName) VALUES (?, ?)',
+                [ $classid, $groupname ]
+            );
+
+            return $this->FindClassGroup($classid, $id);
+    
+        }
+
+        function RenameGroup($classid, $groupid, $groupname) {
+
+            $this->db->query(
+                'UPDATE ClassGroups SET GroupName = ? WHERE GroupID = ? AND ClassID = ?',
+                [ $groupname, $groupid, $classid ],
+                false
+            );
+
+            return $this->FindClassGroup($classid, $groupid);
+
+        }
+
+        function DeleteClassGroup($classid, $groupid) {
+            
+            return $this->db->query(
+                'DELETE FROM ClassGroups WHERE ClassID = ? AND GroupID = ?',
+                [ $classid, $groupid ],
+                false
+            );
+
+        }
+
+        function GetClassGroups($classid) {
+
+            return $this->db->query(
+                'SELECT * FROM ClassGroups WHERE ClassID = ?',
+                [ $classid ]
+            )->fetchAll();
+
+        }
+
+        function GetSchoolClasses($schoolid) {
+
+            return $this->db->query(
+                'SELECT * FROM Classrooms WHERE SchoolID = ?',
+                [ $schoolid ]
+            )->fetchAll();
+
+        }
+
+        function DeleteSchool($schoolid) {
+            
+            return $this->db->query(
+                'DELETE FROM Schools WHERE SchoolID = ?',
+                [ $schoolid ],
+                false
+            );
 
         }
 

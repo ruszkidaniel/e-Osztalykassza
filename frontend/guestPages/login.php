@@ -45,7 +45,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
 	</label>
 	<input type="submit" value="Belépés" class="btn" tabindex="3">
 	<p class="text-center">
-		Belépés Facebokkal:
+		Belépés Facebookkal:
 		<fb:login-button 
 		scope="public_profile,email"
 		onlogin="checkLoginState();">

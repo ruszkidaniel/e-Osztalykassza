@@ -23,6 +23,7 @@ a:hover {
 a.btn,
 input.btn,
 .btn {
+  display: inline-block;
   border-radius: 5px;
   border: 1px solid #000;
   background: rgba(0, 0, 0, 0.6);
@@ -62,6 +63,10 @@ div.flex-spread {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.flex-reverse {
+  flex-direction: row-reverse;
 }
 
 div.cookiebox {
@@ -181,6 +186,12 @@ p.intro {
   box-shadow: #000 1px 1px 5px;
   color: #bbb;
 }
+.box.colored {
+  background-color: rgba(0,0,150,.2);
+}
+.box.colored:hover {
+  background-color: rgba(0,0,150,.4);
+}
 .box ul {
   padding-left: 30px;
 }
@@ -197,7 +208,7 @@ p.intro {
   transition: all .1s ease-in;
 }
 
-main > hr {
+main hr {
   border-color: #555;
 }
 
@@ -259,6 +270,7 @@ p.info {
 .box select option {
   background-color: #111;
   outline-color: #000;
+  font-size: 12pt;
 }
 
 /* main end */
@@ -274,6 +286,30 @@ p.info {
   padding: 10px;
   background-color: rgba(0,0,0,0.3);
   border-radius: 5px;
+}
+
+#classgroups {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-evenly;
+}
+#classgroups .box {
+  width: 30%;
+  margin: 20px;
+}
+.classgroup-header {
+  display: flex;
+}
+.classgroup-header h2 {
+  flex-grow: 1;
+}
+.classgroup-header input {
+  background-color: rgba(255,0, 0, 0.3);
+  max-height: 3em;
+}
+.classgroup-header input[type="submit"]:hover {
+  background-color: rgba(255, 0, 0, 0.5);
+  cursor: pointer;
 }
 
 /* newschool end */
@@ -331,5 +367,7 @@ p span {
 ::-webkit-scrollbar-track { background: rgba(0,0,0,0.5); }
 ::-webkit-scrollbar-thumb { background: #aaa; }
 ::-webkit-scrollbar-thumb:hover { background: #fff; }
+
+.clear { clear: both; }
 
 /*# sourceMappingURL=main.css.map */

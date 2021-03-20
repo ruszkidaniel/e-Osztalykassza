@@ -16,13 +16,13 @@
     <h3>Osztály</h3>
 <?php
 
-    echo isset($_SESSION['ClassID'], $_SESSION['ClassName']) ? '<p>Osztály: <strong>'.$_SESSION['ClassName'].'</strong></p>' : '<p>Nincs kiválasztva osztály.</p>';
+    echo isset($_SESSION['ClassInfo']) ? '<p>Osztály: <strong>'.$_SESSION['ClassInfo']['ClassName'].'</strong></p>' : '<p>Nincs kiválasztva osztály.</p>';
 
-    if(isset($_SESSION['ClassID'])) {
+    if(isset($_SESSION['ClassInfo'])) {
 
 ?>
     <nav>
-        <a href="/requests"><i class="fas fa-plus-circle"></i> Kérvények</a>
+        <a href="/dashboard"><i class="fas fa-plus-circle"></i> Kérvények</a>
         <a href="/permissions"><i class="fas fa-key"></i> Jogosultságok</a>
         <a href="/settings"><i class="fas fa-cog"></i> Beállítások</a>
     </nav>

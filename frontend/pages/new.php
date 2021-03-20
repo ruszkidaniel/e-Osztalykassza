@@ -15,7 +15,7 @@ class NewClassPage extends BasePage {
 
         $this->classes = $this->dataManager->GetUserOwnedClasses($_SESSION['UserID']);
 
-        if(count($this->classes) > 0) {
+        if(false && count($this->classes) > 0) {
             // PREMIUM: users who bought premium features should be allowed to make more than 1 classes
             $this->alreadyOwnAClass();
             return true;
@@ -29,15 +29,35 @@ class NewClassPage extends BasePage {
     }
 
     private function run() {
-    
+        var_dump($_SESSION);
         $parse = 'parseStep' . $_SESSION['NewClass'];
         if($_SERVER['REQUEST_METHOD'] == 'POST' && method_exists($this, $parse))
             $this->$parse();
+
+        if(count($this->path) > 1 && $this->path[1] == 'cancel') {
+            if(isset($_SESSION['ClassInfo'])) {
+                if($_SESSION['NewClass'] >= 2) // has selected class AND after the class creation phase
+                    $this->dataManager->DeleteClass($_SESSION['ClassInfo']['ClassID']));
+                
+                unset($_SESSION['ClassInfo']);
+            }
+
+            if(isset($_SESSION['SelectedSchool'])) {
+                $isEmpty = count($this->dataManager->GetSchoolClasses($_SESSION['SelectedSchool']['SchoolID'])) == 0;
+                if($isEmpty) 
+                    $this->dataManager->DeleteSchool($_SESSION['SelectedSchool']['SchoolID']));
+
+                unset($_SESSION['SelectedSchool']);
+            }
+            $_SESSION['NewClass'] = 0;
+            redirect_to_url('/');
+        }
 
         echo '
         <div class="box">
             <h2>Új osztály létrehozása</h2>
             <p>Az új osztály létrehozásának lépései: '.$this->getSteps().'</p>
+            <p>Amennyiben megszakítaná a folyamatot, kattintson a gombra:<a href="/new/cancel" class="btn align-center">Megszakítás</a></p>
         </div>';
     
         $method = 'runStep' . $_SESSION['NewClass'];
@@ -102,14 +122,16 @@ class NewClassPage extends BasePage {
         $schoolsDOM .= '<option value="-1" selected>Új iskola hozzáadása</option>';
 
         echo '
-        <div class="box fit-content align-center">
+        <div class="box fit-content align-center" id="school-select">
             <h2 class="text-center">Iskola kiválasztása</h2>
             <p class="text-center align-center">Ha szerepel a listában az Ön iskolájának neve, kérjük válassza ki!</p>
-            <form method="POST" action="/new" id="school-select">
+            <form method="POST" action="/new">
                 <select name="school" id="school">
                     '.$schoolsDOM.'
                 </select> <input type="submit" name="found" value="Kiválaszt">
-                <hr>
+            </form>
+            <hr>
+            <form method="POST" action="/new">
                 <div>
                     <p>Ha nem találta meg az iskoláját, adja hozzá az alábbi űrlapon:</p>
                     <label for="schoolName">
@@ -119,7 +141,8 @@ class NewClassPage extends BasePage {
                     </label>
                     <input type="submit" name="add" value="Hozzáadás">
                 </div>
-            </form>';
+            </form>
+            ';
         if(isset($this->error))
             echo '<p id="response" class="align-center failure">'.$this->error.'</p>';
         echo '
@@ -143,26 +166,29 @@ class NewClassPage extends BasePage {
             $this->error = 'Az osztály nevének 3 és 16 karakter között kell lennie.';
             return;
         }
-        
+
         $desc_len = mb_strlen($_POST['Description']);
         if($desc_len > 1024) {
             $this->error = 'A leírás maximum 1024 karakteres lehet.';
             return;
         }
 
-        $found = $this->dataManager->FindClass($_SESSION['SelectedSchool']['SchoolID'], $_POST['ClassName']);
-        if(count($found) > 0) {
+        $found = $this->dataManager->FindClass($_SESSION['SelectedSchool']['SchoolID'], $_POST['ClassName'], false);
+        if($found) {
             $this->error = 'Ebben az iskolában már létre van hozva ilyen nevű osztály!';
             return;
         }
 
-        $success = $this->dataManager->CreateClass($_SESSION['SelectedSchool']['SchoolID'], $_POST['ClassName'], $_POST['Description']);
-        if(!$success) {
+        $class = $this->dataManager->CreateClass($_SESSION['SelectedSchool']['SchoolID'], $_POST['ClassName'], $_SESSION['UserID'], $_POST['Description']);
+        if(!$class) {
             $this->error = 'Nem sikerült létrehozni az osztályt.';
             return;
         }
 
+        $this->dataManager->AddMemberToClass($_SESSION['UserID'], $class['ClassID']);
+
         $_SESSION['NewClass'] = 2;
+        $_SESSION['ClassInfo'] = $class;
     }
 
     private function runStep1() {
@@ -188,17 +214,146 @@ class NewClassPage extends BasePage {
 A kasszát a jogszabálynak megfelelően Zsolt szülei kezelik.
 Egyelőre ismerkedünk a rendszerrel, kérném szíves türelmüket!"></textarea>
                 </label>
-                <div class="flex-spread">
-                    <input type="submit" value="Vissza" name="back">
+                <div class="flex-spread flex-reverse"> <!-- flex-reverse: first submit should be the next button -->
                     <input type="submit" value="Tovább" name="next">
+                    <input type="submit" value="Vissza" name="back">
                 </div>
             </form>
         </div>
         ';
     }
 
+    private function parseStep2() {
+        $classID = $_SESSION['ClassInfo']['ClassID'];
+        if(isset($_POST['saveGroupName'], $_POST['groupName'], $_POST['groupID'])) {
+            // checking whether its a new group
+            if($_POST['groupID'] == -1)
+                $found = false;
+            else
+                $found = $this->dataManager->FindClassGroup($classID, $_POST['groupID']);
+
+            if($found) {
+                $renamed = $this->dataManager->RenameGroup($classID, $_POST['groupID'], $_POST['groupName']);
+                $idx = $this->findGroupInSession($_POST['groupID']);
+                if($idx == -1) return;
+
+                $_SESSION['ClassGroups'][$idx] = $renamed;
+                return;
+            }
+
+            $groups = $this->dataManager->GetClassGroups($classID);
+            if(count($groups) >= 3) return;
+
+            $group = $this->dataManager->AddClassGroup($classID, $_POST['groupName']);
+            if(!isset($_SESSION['ClassGroups']))
+                $_SESSION['ClassGroups'] = [];
+
+            $_SESSION['ClassGroups'][] = $group;
+        }
+        elseif(isset($_POST['delete'], $_POST['groupID'])) {
+            $idx = $this->findGroupInSession($_POST['groupID']);
+            if($idx != -1)
+                array_splice($_SESSION['ClassGroups'], $idx, 1);
+
+            $this->dataManager->DeleteClassGroup($classID, $_POST['groupID']);
+        }
+        elseif(isset($_POST['done'])) {
+            $_SESSION['NewClass'] = 3;
+        }
+    }
+
+    private function runStep2() {
+        echo '
+        <div class="box fit-content align-center">
+            <h2 class="text-center">Csoportok létrehozása</h2>
+            <p class="text-center">Most opcionálisan megadhat különböző osztályokon belüli csoportokat, legfeljebb hármat.<br>
+            Ez a későbbiekben hasznos lehet, amikor előre meghatározott emberektől kell pénzt kérni / kihagyni a kérelemből.<br>
+            Amennyiben nem szeretne csoportokat megadni, vagy elmentett minden módosítást, kattintson a megerősítéshez:
+            <form method="POST" action="/new" class="text-center">
+                <input type="submit" name="done" value="Készen vagyok, következő lépés" class="align-center">
+            </form></p>
+        </div>
+        <div class="text-center" id="classgroups">';
+
+        $template = '<div class="box colored">
+            <form method="POST" class="classgroup-header">
+                <h2>{{groupName}}</h2>
+                <input type="hidden" name="groupID" value="{{groupID}}">
+                {{delete}}
+            </form>
+            <hr>
+            <form method="POST" action="/new">
+                <label for="groupName">
+                    Csoport neve:
+                    <input type="text" name="groupName" placeholder="{{groupName}}" id="groupName">
+                    <input type="submit" name="saveGroupName" value="Mentés">
+                </label>
+                <input type="hidden" name="groupID" value="{{groupID}}">
+            </form>
+        </div>';
+
+        $len = 0;
+        $deleteDOM = '<input type="submit" name="delete" value="X">';
+        if(isset($_SESSION['ClassGroups'])) {
+            for($i = 0; $i < min(3, count($_SESSION['ClassGroups'])); $i++) {
+                $group = $_SESSION['ClassGroups'][$i];
+                if(!$group) continue;
+                
+                $len++;
+                echo str_replace(
+                    ['{{groupName}}', '{{delete}}', '{{groupID}}'], 
+                    [htmlentities($group['GroupName']), $deleteDOM, $group['GroupID']],
+                    $template
+                );
+            }
+        }
+
+        if($len < 3)
+            echo str_replace(['{{groupName}}', '{{delete}}', '{{groupID}}'], ['Új csoport felvétele', '', -1], $template);
+
+        echo '</div>';
+    }
+
+    private function parseStep3() {
+        //$invitecode = $this->
+        $email = '<h3>Tisztelt Cím!</h3>'.PHP_EOL;
+        $email .= '<p>Meghívást kapott az <strong>e-Osztálykassza</strong> szolgáltatásra.</p>';
+        $email .= '<p>A szolgáltatás lényege, hogy az iskolai osztálypénzgyűjtést leegyszerűsítse, és könnyen adminisztrálhatóvá tegye az osztályprogramok szervezéséhez, iskolai ügyek intézéséhez.</p>';
+        $email .= '<p>Amennyiben elfogadja a meghívást, kérjük kattintson az alábbi hivatkozásra, vagy másolja be a böngészője címsorába<br><a href="/invite/"></a></p>';
+    }
+
+    private function runStep3() {
+        $dom = str_repeat('<div>'.str_repeat('<input type="email" placeholder="E-mail cím" name="email[]">'.PHP_EOL, 15).'</div>'.PHP_EOL, 2);
+        echo '
+        <div class="box fit-content align-center">
+            <h2 class="text-center">Szülők meghívása</h2>
+            <p class="text-center">
+            Az utolsó lépésben meghívhatja az osztály tanulóinak szüleit a csoportba az email címük megadásával.<br>
+            Ez a lépés kihagyható, azonban később csak egyesével hívhatja meg a csoport tagjait.
+            <hr class="align-center">
+            <form method="POST" action="/new" class="text-center">
+                <div class="flex-spread">
+                '.$dom.'
+                </div>
+                <input type="submit" name="invite" value="Szülők meghívása" class="align-center">
+            </form></p>
+        </div>
+        <div class="text-center" id="classgroups">';
+
+        echo '</div>';
+    }
+
     private function getSteps() {
         return implode(' -> ', array_map(function($x, $i) { return $i == $_SESSION['NewClass'] ? '<span>'.$x.'</span>' : $x; }, $this::$steps, array_keys($this::$steps)));
+    }
+
+    private function findGroupInSession($id) {
+        if(!isset($_SESSION['ClassGroups'])) return -1;
+        $i = 0;
+        $count = count($_SESSION['ClassGroups']);
+
+        while($i < $count && (gettype($_SESSION['ClassGroups'][$i]) != 'array' || $_SESSION['ClassGroups'][$i]['GroupID'] != $id)) $i++;
+        return $i == $count ? -1 : $i;
     }
 
     private function alreadyOwnAClass() {
