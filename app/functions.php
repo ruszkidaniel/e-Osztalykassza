@@ -4,13 +4,34 @@
         global $cookieHandler;
         return $cookieHandler->Check() && isset($_SESSION['UserID']) && !isset($_SESSION['NEED_2FA']);
     }
-
+    
     function random_characters($len) {
-        $seed = str_split('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789');
-        shuffle($seed);
-        $res = '';
-        foreach (array_rand($seed, $len) as $k) $res .= $seed[$k];
-        return $res;
+        $validChars = str_split('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789');
+        
+        $secret = '';
+        $rnd = false;
+        if (function_exists('random_bytes')) {
+            $rnd = random_bytes($len);
+        } elseif (function_exists('mcrypt_create_iv')) {
+            $rnd = mcrypt_create_iv($len, MCRYPT_DEV_URANDOM);
+        } elseif (function_exists('openssl_random_pseudo_bytes')) {
+            $rnd = openssl_random_pseudo_bytes($len, $cryptoStrong);
+            if (!$cryptoStrong) {
+                $rnd = false;
+            }
+        }
+
+        if ($rnd !== false) {
+            for ($i = 0; $i < $len; ++$i) {
+                $secret .= $validChars[ord($rnd[$i]) & count($validChars)-1];
+            }
+        } else {
+            foreach (array_rand($validChars, $len) as $k)
+                $secret .= $validChars[$k];
+
+            error_log('random_characters is not secure enough.');
+        }
+        return $secret;
     }
 
     function censored_email($email, $char = '•') {
@@ -40,4 +61,8 @@
     function redirect_to_url($url) {
         header('Location: ' . $url);
         die('<meta http-equiv="refresh" content="0;'. $url .'">');
+    }
+
+    function price_format($price) {
+        return number_format($price,null,null,'.');
     }

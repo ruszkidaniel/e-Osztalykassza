@@ -38,6 +38,9 @@
             if(method_exists($loaded, 'setDataManager'))
                 $loaded->setDataManager($dataManager);
 
+            if(method_exists($loaded, 'setPageConfig'))
+                $loaded->setPageConfig($pageConfig);
+
             $run = $loaded->init($userClassPermissions, $userGlobalPermissions);
             if(!$run) {
                 require_once('./frontend/403.html');

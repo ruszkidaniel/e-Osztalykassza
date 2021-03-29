@@ -1,11 +1,4 @@
 <?php
-/*
-    $_SESSION['REGISTER_DATA'] = [
-        'UserID' => '18',
-        'UserName' => 'ruszki.daniel',
-        'FullName' => 'Ruszki Dániel',
-        'Email' => 'ruszki.daniel@gmail.com'
-    ];//*/
 
     if(!isset($_SESSION['REGISTER_DATA'])) {
         

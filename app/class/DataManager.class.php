@@ -67,10 +67,7 @@
                 [ $username, $username ]
             )->fetchAll();
 
-            if(!$result || count($result) == 0)
-                return false;
-            
-            return $result[0];
+            return $this->GetFirstResult($result);
 
         }
 
@@ -168,10 +165,8 @@
                 [ $userid, $type ]
             )->fetchAll();
             
-            if(!$result || count($result) == 0)
-                return false;
+            return $this->GetFirstResult($result);
 
-            return $result[0];
         }
 
         function InsertNewVerificationCode($code, $userID, $type) {
@@ -282,19 +277,14 @@
                 [$userid]
             )->fetchAll();
             
-            if(count($result) > 0)
-                $result = $result[0];
-            else
-                $result = false;
-            
-            return $result;
+            return $this->GetFirstResult($result);
 
         }
 
         function GetUserClassrooms($userid) {
 
             return $this->db->query(
-                'SELECT ClassID, ClassName FROM Classrooms NATURAL LEFT JOIN ClassMembers WHERE UserID = ?',
+                'SELECT ClassID, ClassName, SchoolName FROM Classrooms NATURAL LEFT JOIN ClassMembers NATURAL LEFT JOIN Schools WHERE UserID = ?',
                 [ $userid ]
             )->fetchAll();
 
@@ -346,12 +336,16 @@
                 [ $class ]
             )->fetchAll();
 
-            if(count($classInfo) > 0)
-                $classInfo = $classInfo[0];
-            else
-                $classInfo = false;
+            return $this->GetFirstResult($classInfo);
 
-            return $classInfo;
+        }
+
+        function GetClassMembers($class) {
+
+            return $this->db->query(
+                'SELECT UserID, FullName FROM Users NATURAL RIGHT JOIN ClassMembers WHERE ClassID = ?',
+                [ $class ]
+            )->fetchAll();
 
         }
 
@@ -364,13 +358,8 @@
                 [ $schoolid, $id ]
             )->fetchAll();
 
-            if(count($class) > 0)
-                $class = $class[0];
-            else
-                $class = false;
+            return $this->GetFirstResult($class);
             
-            return $class;
-    
         }
     
         function CreateClass($schoolid, $classname, $ownerid, $description) {
@@ -418,12 +407,7 @@
                 [ $classid, $id ]
             )->fetchAll();
 
-            if(count($class) > 0)
-                $class = $class[0];
-            else
-                $class = false;
-            
-            return $class;
+            return $this->GetFirstResult($class);
     
         }
         
@@ -485,6 +469,130 @@
                 [ $schoolid ],
                 false
             );
+
+        }
+
+        function GetUnsubscribedEmails($list) {
+
+            if(count($list) == 0) return [];
+
+            $result = $this->db->queryList(
+                'SELECT Address FROM EmailIgnoreList WHERE Address IN ?',
+                $list
+            )->fetchAll();
+
+            return array_map(function($x){ return $x['Address']; }, $result);
+
+        }
+
+        function CreateInvitations($from, $classid, $targets) {
+
+            $data = array_map(function($target) use($from, $classid) {
+                return [$target['Code'], $classid, $from, $target['Email'], 'pending'];
+            }, $targets);
+            
+            $this->db->InsertMultiple(
+                'INSERT INTO Invites (InviteCode, ClassID, InvitedBy, Email, Date, Status) VALUES (?,?,?,?,NOW(),?)',
+                $data
+            );
+
+        }
+
+        function GetInviteData($inviteCode) {
+            
+            $result = $this->db->query(
+                'SELECT Invites.*, Users.FullName, Classrooms.ClassName FROM Invites 
+                LEFT JOIN Users ON Users.UserID = Invites.InvitedBy 
+                NATURAL LEFT JOIN Classrooms
+                WHERE InviteCode = ?',
+                [ $inviteCode ]
+            )->fetchAll();
+
+            return $this->GetFirstResult($result);
+
+        }
+
+        function HandleInviteResponse($code, $accept) {
+
+            return $this->db->query(
+                'UPDATE Invites SET `Status` = ? WHERE `InviteCode` = ?',
+                [ $accept ? 'accepted' : 'declined', $code ],
+                false
+            );
+
+        }
+
+        function GetDetailedClassData($classid) {
+
+            $response = [
+                'info' => [],
+                'members' => []
+            ];
+
+            $info = $this->GetClassInfo($classid);
+            if($info) $response['info'] = $info;
+
+            $members = $this->GetClassMembers($classid);
+            if($members) $response['members'] = $members;
+
+            return $response;
+
+        }
+
+        function OptOutEmail($email) {
+
+            return $this->db->query(
+                'INSERT INTO EmailIgnoreList (`Address`, `Date`) VALUES (?, NOW())',
+                [ $email ],
+                false
+            );
+
+        }
+
+        function GetUserDebts($classid, $userid) {
+
+            return $this->db->query(
+                'SELECT * FROM UserDebts NATURAL LEFT JOIN PayRequests WHERE ClassID = ? AND UserID = ?',
+                [ $classid, $userid ]
+            )->fetchAll();
+
+        }
+
+        function GetPayRequestInfo($requestid) {
+
+            $result = $this->db->query(
+                'SELECT PayRequests.*, FullName, COUNT(UserDebts.DebtID) as RequestedUsers, SUM(UserDebts.Amount) as PaidTotal, SUM(UserDebts.RequiredAmount) as RequiredTotal
+                FROM `PayRequests` 
+                NATURAL LEFT JOIN UserDebts
+                LEFT JOIN Users ON Users.UserID = PayRequests.RequestedBy
+                WHERE PayRequests.RequestID = ?',
+                [ $requestid ]
+            )->fetchAll();
+
+            return $this->GetFirstResult($result);
+
+        }
+
+        function GetDebtsByRequest($requestid) {
+
+            return $this->db->query(
+                'SELECT FullName, UserDebts.*
+                FROM UserDebts
+                NATURAL LEFT JOIN Users
+                WHERE RequestID = ?',
+                [ $requestid ]
+            )->fetchAll();
+
+        }
+
+        function GetFirstResult($result) {
+            
+            if(count($result) > 0)
+                $result = $result[0];
+            else
+                $result = false;
+            
+            return $result;
 
         }
 

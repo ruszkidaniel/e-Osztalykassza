@@ -47,4 +47,25 @@
 
         }
 
+        function queryList($sql, $params) {
+
+            $questionmarks = implode(', ',str_split(str_repeat('?', count($params))));
+            $sql = str_replace('?', '('. $questionmarks .')', $sql);
+            return $this->query($sql, $params);
+
+        }
+
+        function InsertMultiple($sql, $datas) {
+
+            $q = $this->db->prepare($sql);
+            
+            $this->db->beginTransaction();
+            foreach($datas as $data)
+                $q->execute($data);
+            $this->db->commit();
+
+            return $q;
+
+        }
+
     }

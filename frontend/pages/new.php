@@ -10,11 +10,11 @@ class NewClassPage extends BasePage {
     ];
 
     public function init($userPermissions, $globalPermissions) {
-        $this->setIntro('Osztály létrehozása');
         $this->echoHeader();
 
         $this->classes = $this->dataManager->GetUserOwnedClasses($_SESSION['UserID']);
 
+        // TODO: remove test
         if(false && count($this->classes) > 0) {
             // PREMIUM: users who bought premium features should be allowed to make more than 1 classes
             $this->alreadyOwnAClass();
@@ -29,7 +29,7 @@ class NewClassPage extends BasePage {
     }
 
     private function run() {
-        var_dump($_SESSION);
+        
         $parse = 'parseStep' . $_SESSION['NewClass'];
         if($_SERVER['REQUEST_METHOD'] == 'POST' && method_exists($this, $parse))
             $this->$parse();
@@ -37,7 +37,7 @@ class NewClassPage extends BasePage {
         if(count($this->path) > 1 && $this->path[1] == 'cancel') {
             if(isset($_SESSION['ClassInfo'])) {
                 if($_SESSION['NewClass'] >= 2) // has selected class AND after the class creation phase
-                    $this->dataManager->DeleteClass($_SESSION['ClassInfo']['ClassID']));
+                    $this->dataManager->DeleteClass($_SESSION['ClassInfo']['ClassID']);
                 
                 unset($_SESSION['ClassInfo']);
             }
@@ -45,7 +45,7 @@ class NewClassPage extends BasePage {
             if(isset($_SESSION['SelectedSchool'])) {
                 $isEmpty = count($this->dataManager->GetSchoolClasses($_SESSION['SelectedSchool']['SchoolID'])) == 0;
                 if($isEmpty) 
-                    $this->dataManager->DeleteSchool($_SESSION['SelectedSchool']['SchoolID']));
+                    $this->dataManager->DeleteSchool($_SESSION['SelectedSchool']['SchoolID']);
 
                 unset($_SESSION['SelectedSchool']);
             }
@@ -56,8 +56,7 @@ class NewClassPage extends BasePage {
         echo '
         <div class="box">
             <h2>Új osztály létrehozása</h2>
-            <p>Az új osztály létrehozásának lépései: '.$this->getSteps().'</p>
-            <p>Amennyiben megszakítaná a folyamatot, kattintson a gombra:<a href="/new/cancel" class="btn align-center">Megszakítás</a></p>
+            <p>Az új osztály létrehozásának lépései: '.$this->getSteps().' | Vagy: <a href="/new/cancel" class="btn">Megszakítás</a></p>
         </div>';
     
         $method = 'runStep' . $_SESSION['NewClass'];
@@ -210,7 +209,7 @@ class NewClassPage extends BasePage {
                 </label>
                 <label for="ClassName">
                     Leírása:<br>
-                    <textarea name="Description" id="Description" rows="10" cols="100" placeholder="pl: Ez a 8.A osztály elektronikus osztálykasszája.
+                    <textarea name="Description" id="Description" rows="8" cols="100" placeholder="pl: Ez a 8.A osztály elektronikus osztálykasszája.
 A kasszát a jogszabálynak megfelelően Zsolt szülei kezelik.
 Egyelőre ismerkedünk a rendszerrel, kérném szíves türelmüket!"></textarea>
                 </label>
@@ -219,6 +218,10 @@ Egyelőre ismerkedünk a rendszerrel, kérném szíves türelmüket!"></textarea
                     <input type="submit" value="Vissza" name="back">
                 </div>
             </form>
+            ';
+        if(isset($this->error))
+            echo '<p id="response" class="align-center failure">'.$this->error.'</p>';
+        echo '
         </div>
         ';
     }
@@ -226,17 +229,19 @@ Egyelőre ismerkedünk a rendszerrel, kérném szíves türelmüket!"></textarea
     private function parseStep2() {
         $classID = $_SESSION['ClassInfo']['ClassID'];
         if(isset($_POST['saveGroupName'], $_POST['groupName'], $_POST['groupID'])) {
+            if(strlen($_POST['groupName']) > 16 || strlen($_POST['groupName']) < 3) {
+                $this->error = 'A csoport nevének 3 és 16 karakter között kell lennie.';
+                return;
+            }
+            
             // checking whether its a new group
-            if($_POST['groupID'] == -1)
-                $found = false;
-            else
-                $found = $this->dataManager->FindClassGroup($classID, $_POST['groupID']);
+            $found = $this->dataManager->FindClassGroup($classID, $_POST['groupName'], false);
 
             if($found) {
-                $renamed = $this->dataManager->RenameGroup($classID, $_POST['groupID'], $_POST['groupName']);
-                $idx = $this->findGroupInSession($_POST['groupID']);
+                $idx = $this->findGroupInSession($found['GroupID']);
                 if($idx == -1) return;
 
+                $renamed = $this->dataManager->RenameGroup($classID, $found['GroupID'], $_POST['groupName']);
                 $_SESSION['ClassGroups'][$idx] = $renamed;
                 return;
             }
@@ -258,6 +263,7 @@ Egyelőre ismerkedünk a rendszerrel, kérném szíves türelmüket!"></textarea
             $this->dataManager->DeleteClassGroup($classID, $_POST['groupID']);
         }
         elseif(isset($_POST['done'])) {
+            $_SESSION['csrf'] = random_characters(24);
             $_SESSION['NewClass'] = 3;
         }
     }
@@ -310,19 +316,100 @@ Egyelőre ismerkedünk a rendszerrel, kérném szíves türelmüket!"></textarea
 
         if($len < 3)
             echo str_replace(['{{groupName}}', '{{delete}}', '{{groupID}}'], ['Új csoport felvétele', '', -1], $template);
-
+            
+        if(isset($this->error))
+            echo '<p id="response" class="align-center failure">'.$this->error.'</p>';
+            
         echo '</div>';
     }
 
     private function parseStep3() {
-        //$invitecode = $this->
+        $this->response = ['success' => [], 'failed' => []];
+
+        if(isset($_POST['skip'])) return;
+        
+        if(!isset($_POST['email'], $_POST['csrf'], $_SESSION['csrf']) || gettype($_POST['email']) != 'array') return;
+        if($_POST['csrf'] != $_SESSION['csrf']) return;
+        unset($_SESSION['csrf']);
+        
+        // filter invalid emails
+        $emails = array_unique(array_filter($_POST['email'], function($email){ return filter_var($email, FILTER_VALIDATE_EMAIL); }));
+
+        $url = $this->pageConfig::WEBSITE_ADDRESS;
+        $logo = $this->pageConfig::EMAIL_LOGO;
+
         $email = '<h3>Tisztelt Cím!</h3>'.PHP_EOL;
+        $email .= '<br>';
         $email .= '<p>Meghívást kapott az <strong>e-Osztálykassza</strong> szolgáltatásra.</p>';
         $email .= '<p>A szolgáltatás lényege, hogy az iskolai osztálypénzgyűjtést leegyszerűsítse, és könnyen adminisztrálhatóvá tegye az osztályprogramok szervezéséhez, iskolai ügyek intézéséhez.</p>';
-        $email .= '<p>Amennyiben elfogadja a meghívást, kérjük kattintson az alábbi hivatkozásra, vagy másolja be a böngészője címsorába<br><a href="/invite/"></a></p>';
+        $email .= '<p>Amennyiben elfogadja a meghívást, kérjük kattintson az alábbi hivatkozásra, vagy másolja be a böngészője címsorába<br><a href="{{inviteurl}}">{{inviteurl}}</a></p>';
+        $email .= '<br>';
+        $email .= '<p>Ha nem élne a lehetőséggel, kattintson <a href="{{declineurl}}">erre a szövegre</a> a meghívás elutasításához.</p>';
+        $email .= '<p>Ha a továbbiakban nem szeretne meghívást kapni erre az oldalra, <a href="{{optouturl}}">kattintson ide</a>!</p>';
+        $email .= '<br>';
+        $email .= '<img src="'.$logo.'" style="float: left; height: 32px"><span style="font-weight: bold; font-size: 12pt; padding-left: 30px; line-height: 32px;">e-Osztálykassza</span>'.PHP_EOL;
+
+        $optoutlist = $this->dataManager->GetUnsubscribedEmails($emails);
+
+        $subject = "e-Osztálykassza meghívó";
+
+        $headers = "MIME-Version: 1.0" . "\r\n";
+        $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+        $headers .= 'From: <noreply@'.$this->pageConfig::WEBSITE_DOMAIN.'>' . "\r\n";
+
+        for($i = 0; $i < count($emails); $i++) {
+            $address = $emails[$i];
+            
+            if(array_search($address, $optoutlist) !== false) {
+                $this->response['failed'][] = $address;
+                continue;
+            }
+            
+            $inviteCode = random_characters(32);
+            $inviteurl = $url . 'invite/accept/' . $inviteCode;
+            $declineurl = $url . 'invite/decline/' . $inviteCode;
+            $optouturl = $url . 'invite/optout/' . $inviteCode;
+
+            $this->response['success'][] = ['Email' => $address, 'Code' => $inviteCode];
+            
+            $message = str_replace(['{{inviteurl}}', '{{declineurl}}', '{{optouturl}}'], [$inviteurl, $declineurl, $optouturl], $email);
+            
+            mail($address,$subject,$message,$headers);
+        }
+
+        $this->dataManager->CreateInvitations($_SESSION['UserID'], $_SESSION['ClassInfo']['ClassID'], $this->response['success']);
+
     }
 
     private function runStep3() {
+        if(isset($this->response)) {
+            $failed = count($this->response['failed']);
+            $failedDOM = $failed > 0 ?
+                '<strong>'.$failed.'</strong> szülő korábban leiratkozott a szolgáltatásról, így nem került meghívásra. Lista:' :
+                '<strong>Minden kiválasztott szülő meg lett hívva.</strong>';
+
+            if($failed > 0) 
+                $failedDOM .= '<ul>'.PHP_EOL.implode(PHP_EOL, array_map(function($f) { return '<li>'.$f.'</li>'; }, $this->response['failed'])).PHP_EOL.'</ul>';
+
+            echo '
+            <div class="box fit-content align-center" id="invite-success">
+                <h2>Szülők meghívva</h2>
+                <hr class="align-center">
+                <p>'.$failedDOM.'</p>
+                <p>Meghívottak listája (<strong>'.count($this->response['success']).'</strong>):</p>
+                <ul>
+                    '.implode(PHP_EOL, array_map(function($e){return '<li>'.$e['Email'].'</li>';}, $this->response['success'])).'
+                </ul>
+                <p class="text-center"><a href="/dashboard" class="btn">Befejezés</a></p>
+            </div>';
+
+            unset($_SESSION['NewClass']);
+
+            return;
+        }
+        
+        if(!isset($_SESSION['csrf'])) return;
+        
         $dom = str_repeat('<div>'.str_repeat('<input type="email" placeholder="E-mail cím" name="email[]">'.PHP_EOL, 15).'</div>'.PHP_EOL, 2);
         echo '
         <div class="box fit-content align-center">
@@ -335,12 +422,11 @@ Egyelőre ismerkedünk a rendszerrel, kérném szíves türelmüket!"></textarea
                 <div class="flex-spread">
                 '.$dom.'
                 </div>
-                <input type="submit" name="invite" value="Szülők meghívása" class="align-center">
+                <input type="hidden" name="csrf" value="'.$_SESSION['csrf'].'">
+                <input type="submit" name="invite" value="Szülők meghívása" class="align-center"><br>
+                <input type="submit" name="skip" value="Kihagyás" class="align-center">
             </form></p>
-        </div>
-        <div class="text-center" id="classgroups">';
-
-        echo '</div>';
+        </div>';
     }
 
     private function getSteps() {

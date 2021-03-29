@@ -7,6 +7,7 @@ abstract class BasePage {
     function setPath($path) { $this->path = $path; }
     function setIntro($text) { $this->intro = $text; }
     function setDataManager($dataManager) { $this->dataManager = $dataManager; }
+    function setPageConfig($pageConfig) { $this->pageConfig = $pageConfig; }
     
     function echoHeader() {
         echo '

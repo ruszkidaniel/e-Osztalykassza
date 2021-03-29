@@ -6,7 +6,7 @@
     if(isset($_SESSION['username']))
         die(header('Location: /'));
     
-    $actions = ['login', 'register', 'forgotpw', 'startdemo'];
+    $actions = ['login', 'register', 'forgotpw', 'startdemo', 'invite'];
     if(count($path) > 0 && in_array($path[0], $actions)) {
         $action = $path[0];
         if(count($path) > 1)

@@ -51,14 +51,9 @@ class ProfilePage extends BasePage {
             </div>
             <hr>
             <div class="text-center">
-                <p><a href="/profile/'.$this->targetUser.'/2fa" class="btn">Két faktoros hitelesítés '.($this->getData('2FAType')==0?'be':'ki').'kapcsolása</a></p>
-                <p><a href="/profile/'.$this->targetUser.'/password" class="btn">Jelszó módosítása</a></p>
+                <p><a href="/profile/'.$this->targetUser.'/2fa" class="btn"><i class="fas fa-mobile-alt"></i> Két faktoros hitelesítés '.($this->getData('2FAType')==0?'be':'ki').'kapcsolása</a></p>
+                <p><a href="/profile/'.$this->targetUser.'/password" class="btn"><i class="fas fa-key"></i> Jelszó módosítása</a></p>
             </div>
-        </div>';
-
-        echo '
-        <div class="box">
-        <h2>Jogosultságok</h2>
         </div>';
     }
 

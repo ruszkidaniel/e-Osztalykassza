@@ -12,6 +12,8 @@
                 case 'profile':
                     $current2FACode = $twoFactorAuthenticator->getCode($_SESSION['REGISTER_DATA']['2FA']);
                     $user->SetupProfile($_SESSION['REGISTER_DATA'], $_POST, $current2FACode);
+                    if(isset($_SESSION['InviteData']['ClassID']))
+                        $dataManager->AddMemberToClass($_SESSION['REGISTER_DATA']['UserID'], $_SESSION['InviteData']['ClassID']);
                     break;
             }
             return api_response(true);

@@ -3,23 +3,32 @@
 class MainPage extends BasePage {
 
     public function init($userPermissions, $globalPermissions) {
-        $this->classes = $this->dataManager->GetUserClassrooms($_SESSION['UserID']);
 
         if(isset($_POST['class'])) {
             $success = $this->selectClass($_POST['class']);
             if($success) return true;
         }
+        
+        $classes = $this->dataManager->GetUserClassrooms($_SESSION['UserID']);
+
+        $this->classes = [];
+        foreach($classes as $val) {
+            $this->classes[$val['SchoolName']][] = $val;
+        }
 
         $this->classDOM = '';
 
-        if(count($this->classes) > 0) {
-            $domElements = [];
-            foreach($this->classes as $class) {
+        $domElements = [];
+        foreach($this->classes as $school => $classes) {
+            $domElements[] = '<optgroup label="'.addslashes($school).'">';
+            foreach($classes as $class) {
                 $selected = isset($_SESSION['ClassID']) && $_SESSION['ClasSID'] == $class['ClassID'] ? 'selected' : '';
                 $domElements[] = '<option value="'.$class['ClassID'].'"'.$selected.'>'.htmlspecialchars($class['ClassName']).'</option>'.PHP_EOL;
             }
-            $this->classDOM = implode(PHP_EOL, $domElements);
+            $domElements[] = '</optgroup>';
         }
+        
+        $this->classDOM = implode(PHP_EOL, $domElements);
         $this->classDOM .= '<option value="-1">Új osztály létrehozása</option>';
 
         $this->run();

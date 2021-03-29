@@ -36,6 +36,10 @@ if(isset($redirect)) {
     redirect_to_url('/register/verify');
 
 } else {
+    $email = '';
+    if(isset($_POST['email'])) $email = $_POST['email'];
+    elseif(isset($_SESSION['InviteData']['Email'])) $email = $_SESSION['InviteData']['Email'];
+
     ?>
     <form action="/register/user" method="POST" autocomplete="off">
         <div class="register-form">
@@ -48,7 +52,7 @@ if(isset($redirect)) {
                 <label for="email">
                     Email cím:
                     <small>Fontos, hogy létező cím legyen</small>
-                    <input type="email" name="email" id="email" value="<?=(isset($_POST['email'])?$_POST['email']:'')?>" tabindex="3" required>
+                    <input type="email" name="email" id="email" value="<?=$email?>" tabindex="3" required>
                 </label>
                 <label for="password">
                     Jelszó:
@@ -65,7 +69,7 @@ if(isset($redirect)) {
                 <label for="email2">
                     Email cím ismét:
                     <small>Ellenőrzés miatt szükséges</small>
-                    <input type="email" name="email2" id="email2" tabindex="4" required>
+                    <input type="email" name="email2" id="email2" value="<?=(isset($_SESSION['InviteData']['Email'])?$_SESSION['InviteData']['Email']:'')?>" tabindex="4" required>
                 </label>
                 <label for="password2">
                     Jelszó ismét:
