@@ -11,6 +11,14 @@ body {
   font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande", "Lucida Sans", Arial, sans-serif;
 }
 
+p.margin {
+  margin: .5em 0;
+}
+
+.small-width {
+  max-width: 20%;
+}
+
 a {
   text-decoration: none;
   color: #0af;
@@ -225,7 +233,7 @@ main hr {
 }
 
 
-label {
+label:not(label label) {
   color: #aaa;
   display: block;
   padding: 0.5em;
@@ -409,12 +417,10 @@ p.info {
   font-size: 16pt;
   font-weight: bold;
 }
-.text-green {
-  color: #0d0;
-}
-.text-red {
-  color: #d00;
-}
+.text-green { color: #0d0; }
+.text-red { color: #d00; }
+.text-orange { color: #fa0; }
+a.btn i { font-size: 12pt; }
 
 .eo-table {
   width: 100%;
@@ -437,13 +443,30 @@ p.debt-info {
   font-size: 32px;
   padding-bottom: .5em;
 }
+.invite-pending { color: #FE0; }
+.invite-accepted { color: #0A0; }
+.invite-declined { color: #A00; }
+
+input#title {
+  max-width: 300px;
+  width: 100%;
+}
+#createrequest label {
+  font-weight: bold;
+}
 
 /* dashboard end */
+
+.small-height {
+  max-height: 25vh;
+  overflow: auto;
+}
 
 input.large-input {
   width: 100%;
 }
 
+h2 span,
 td span,
 p span {
   color: #FA0;

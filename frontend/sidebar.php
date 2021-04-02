@@ -23,7 +23,7 @@
 ?>
     <nav>
         <a href="/dashboard"><i class="fas fa-plus-circle"></i> Áttekintés</a>
-        <a href="/permissions"><i class="fas fa-key"></i> Jogosultságok</a>
+        <a href="/members"><i class="fas fa-users"></i> Csoporttagok</a>
         <a href="/settings"><i class="fas fa-cog"></i> Beállítások</a>
     </nav>
 <?php

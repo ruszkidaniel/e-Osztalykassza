@@ -11,9 +11,22 @@
         }
     }
 
+    // Load permissions
+
     $userClassPermissions = [];
     $userGlobalPermissions = [];
+    SyncPermissions();
     LoadPermissions();
+
+    function SyncPermissions() {
+        global $dataManager;
+        if(!isset($_SESSION['UserID'])) return;
+
+        if(isset($_SESSION['ClassInfo']['ClassID']))
+            $_SESSION['ClassPermissions'] = $dataManager->GetClassPermissions($_SESSION['ClassInfo']['ClassID'], $_SESSION['UserID']);
+
+        $_SESSION['GlobalPermissions'] = $dataManager->GetGlobalPermissions($_SESSION['UserID']);
+    }
 
     function LoadPermissions() {
         global $pageConfig, $userClassPermissions, $userGlobalPermissions;
@@ -27,6 +40,22 @@
             $userGlobalPermissions = $globalPermissions->getPermissions($_SESSION['GlobalPermissions']);
         }
    
+    }
+
+    // Unselect class if not a member
+
+    if(isset($_SESSION['ClassInfo']['ClassID'], $_SESSION['UserID'])) {
+        $inClass = $dataManager->FindUserInClass($_SESSION['ClassInfo']['ClassID'], $_SESSION['UserID']);
+        if($inClass === false)
+            unset($_SESSION['ClassInfo']);
+    }
+
+    // Get invites
+
+    if(isset($_SESSION['UserID'])) {
+        $invites = $dataManager->GetPendingInvitesByID($_SESSION['UserID']);
+        if(count($invites)) $_SESSION['PendingInvites'] = $invites;
+        elseif(isset($_SESSION['PendingInvites'])) unset($_SESSION['PendingInvites']);
     }
 
     require_once('./frontend/main.php');

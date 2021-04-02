@@ -23,10 +23,10 @@ class InviteManager {
         
         return '<h2 class="align-center text-center">Meghívó '.($isAccept?'elfogadása':'elutasítása').'</h2>
             <hr>
-            <p><strong>'.htmlentities($this->inviteData['FullName']).'</strong> meghívta Önt az e-Osztálykassza szolgáltatásra.</p>
-            <p>Az osztály neve: <strong>'.htmlentities($this->inviteData['ClassName']).'</strong></p>
-            <p>Amennyiben el szeretné '.($isAccept?'fogadni':'utasítani').' a meghívót, kattintson a tovább gombra! Ellenkező esetben zárja be ezt az oldalt.</p>
-            <form method="POST" action="/invite">
+            <p class="text-center"><span>'.htmlentities($this->inviteData['FullName']).'</span> meghívta Önt az e-Osztálykassza szolgáltatásra egy osztályba.</p>
+            <p>Az osztály neve: <span>'.htmlentities($this->inviteData['ClassName']).'</span></p>
+            <p>Amennyiben <span class="text-'.($isAccept?'green':'red').'">el szeretné '.($isAccept?'fogadni':'utasítani').'</span> a meghívót, kattintson a tovább gombra! Ellenkező esetben zárja be ezt az oldalt.</p>
+            <form method="POST" action="/invite" class="text-center">
                 <input type="hidden" name="csrf" value="'.$_SESSION['csrf'].'">
                 <input type="hidden" name="inviteCode" value="'.$this->inviteCode.'">
                 <input type="hidden" name="accept" value="'.($isAccept?'true':'false').'">
@@ -38,7 +38,15 @@ class InviteManager {
         if($this->inviteData == false) return $this->noInviteCode();
         if($this->inviteData['Status'] != 'pending') return $this->invalidInviteCode();
         
-        return $this->dataManager->HandleInviteResponse($this->inviteData['InviteCode'], $isAccept);
+        $this->dataManager->HandleInviteResponse($this->inviteData['InviteCode'], $isAccept);
+        
+        $user = $this->dataManager->FindUserByEmail($this->inviteData['Email']);
+        if($user) {
+            $this->dataManager->AddMemberToClass($user['UserID'], $this->inviteData['ClassID']);
+            return $user['UserID'];
+        }
+        
+        return true;
     }
 
     function getInviteData() {

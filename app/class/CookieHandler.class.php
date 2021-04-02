@@ -15,6 +15,8 @@
             if(gettype($path) == 'array' && count($path) > 0 && $path[0] == 'accept-cookies') {
                 $this->cookiesAllowed = true;
                 setcookie('cookiesAllowed',time());
+                if(isset($_GET['back']))
+                    die(header('Location: '.$_GET['back']));
             }
         }
 

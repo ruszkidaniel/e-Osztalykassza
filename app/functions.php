@@ -34,7 +34,7 @@
         return $secret;
     }
 
-    function censored_email($email, $char = '•') {
+    function censored_email($email, $char = '•', $replaceDomain = false) {
         if(!filter_var($email, FILTER_VALIDATE_EMAIL)) return $email;
 
         $parts = explode('@',$email);
@@ -42,13 +42,17 @@
         
         if(strlen($res) < 8)
             $res = substr($parts[0], 0, 2) . str_repeat($char, max(0, strlen($res) - 3)) . '@';
-
-        $subparts = explode('.', $parts[1]);
-        $domain = [];
-        foreach($subparts as $s) {
-            $domain[] = substr($s, 0, 2) . str_repeat($char, max(0, strlen($s)-2));
-        }
-        return $res . implode('.', $domain);
+        
+        if($replaceDomain) {
+            $subparts = explode('.', $parts[1]);
+            $domain = [];
+            foreach($subparts as $s) {
+                $domain[] = substr($s, 0, 2) . str_repeat($char, max(0, strlen($s)-2));
+            }
+            $res .= implode('.', $domain);
+        } else $res .= $parts[1];
+        
+        return $res;
     }
 
     function call_local_api($path, $data = false) {
@@ -64,5 +68,5 @@
     }
 
     function price_format($price) {
-        return number_format($price,null,null,'.');
+        return number_format($price,null,null,' ');
     }

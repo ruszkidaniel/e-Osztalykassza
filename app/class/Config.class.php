@@ -25,9 +25,15 @@
 
         const MAX_LOGIN_ATTEMPTS = 5;
         const LOGIN_BAN_INTERVAL = 60;
+
+        const REQUEST_MIN_TITLE_LENGTH = 3;
+        const REQUEST_MAX_TITLE_LENGTH = 32;
+
+        const REQUEST_MIN_DESCRIPTION_LENGTH = 10;
+        const REQUEST_MAX_DESCRIPTION_LENGTH = 2000;
         
         const CLASS_PERMISSIONS = [
-            'MANAGE_MEMBERS', 'MANAGE_PAYS', 'MANAGE_INVITES',
+            'MANAGE_MEMBERS', 'MANAGE_PAYS',
             'MANAGE_SETTINGS', 'MANAGE_PERMISSIONS', 'MANAGE_REQUESTS',
             'MANAGE_POSTS'
         ];
@@ -36,6 +42,17 @@
             'LOGIN', 'USE_ADMIN_PAGE', 'VIEW_ALL_CLASSES', 'MODIFY_ALL_CLASSES',
             'MANAGE_USERS'
         ];
+
+        const INVITE_MAIL_TEMPLATE = '<h3>Tisztelt Cím!</h3>
+        <br>
+        <p>Meghívást kapott az <strong>e-Osztálykassza</strong> szolgáltatásra.</p>
+        <p>A szolgáltatás lényege, hogy az iskolai osztálypénzgyűjtést leegyszerűsítse, és könnyen adminisztrálhatóvá tegye az osztályprogramok szervezéséhez, iskolai ügyek intézéséhez.</p>
+        <p>Amennyiben elfogadja a meghívást, kérjük kattintson az alábbi hivatkozásra, vagy másolja be a böngészője címsorába<br><a href="{{inviteurl}}">{{inviteurl}}</a></p>
+        <br>
+        <p>Ha nem élne a lehetőséggel, kattintson <a href="{{declineurl}}">erre a szövegre</a> a meghívás elutasításához.</p>
+        <p>Ha a továbbiakban nem szeretne meghívást kapni erre az oldalra, <a href="{{optouturl}}">kattintson ide</a>!</p>
+        <br>
+        <img src="'.Config::EMAIL_LOGO.'" style="float: left; height: 32px"><span style="font-weight: bold; font-size: 12pt; padding-left: 30px; line-height: 32px;">e-Osztálykassza</span>';
     }
 
 ?>

@@ -113,6 +113,17 @@
 
         }
 
+        function GetClassPermissions($classid, $userid) {
+
+            $result = $this->db->query(
+                'SELECT `Permissions` FROM `ClassMembers` WHERE `ClassID` = ? AND `UserID` = ?',
+                [ $classid, $userid ]
+            )->fetchColumn();
+
+            return is_null($result) ? 0 : $result;
+
+        }
+
         function IsValidSession($sessionid) {
 
             $val = $this->db->query(
@@ -242,6 +253,15 @@
 
         }
 
+        function GetGlobalPermissions($userid) {
+
+            return $this->db->query(
+                'SELECT GlobalPermissions FROM Users WHERE UserID = ?',
+                [ $userid ]
+            )->fetchColumn();
+
+        }
+
         function FindUserByIP($userid, $ip) {
 
             $ipid = $this->AssociateDatabaseValueWithID('IpAddresses', 'IP', 'IPID', $ip);
@@ -250,6 +270,17 @@
                 'SELECT COUNT(*) FROM `UserIpTable` WHERE `UserID` = ? AND `IPID` = ?',
                 [ $userid, $ipid ]
             )->fetchColumn();
+
+        }
+
+        function FindUserByEmail($email) {
+
+            $results = $this->db->query(
+                'SELECT UserID, UserName, FullName FROM Users WHERE `Email` = ?',
+                [ $email ]
+            )->fetchAll();
+
+            return $this->GetFirstResult($results);
 
         }
 
@@ -274,10 +305,53 @@
 
             $result = $this->db->query(
                 'SELECT UserName, Email, GlobalPermissions, AccountType, 2FAType, FullName, DOB, DOBHidden FROM Users WHERE UserID = ?', 
-                [$userid]
+                [ $userid ]
             )->fetchAll();
             
             return $this->GetFirstResult($result);
+
+        }
+
+        function GetUserEmail($userid) {
+
+            return $this->db->query(
+                'SELECT Email FROM Users WHERE UserID = ?',
+                [ $userid ]
+            )->fetchColumn();
+            
+        }
+
+        function FindUserInClass($classid, $userid) {
+
+            $result = $this->db->query(
+                'SELECT FullName FROM Users NATURAL LEFT JOIN ClassMembers WHERE UserID = ? AND ClassID = ?', 
+                [ $userid, $classid ]
+            )->fetchColumn();
+            
+            return $result;
+
+        }
+
+        function IsMemberInClass($email, $classid) {
+
+            $result = $this->db->query(
+                'SELECT 1 FROM Users NATURAL LEFT JOIN ClassMembers WHERE Users.Email = ? AND ClassID = ?', 
+                [ $email, $classid ]
+            )->fetchColumn();
+            
+            return $result;
+
+        }
+
+        function KickUserFromClass($classid, $userid) {
+
+            $result = $this->db->query(
+                'DELETE FROM ClassMembers WHERE UserID = ? AND ClassID = ?',
+                [ $userid, $classid ],
+                false
+            );
+            
+            return $result;
 
         }
 
@@ -343,7 +417,33 @@
         function GetClassMembers($class) {
 
             return $this->db->query(
-                'SELECT UserID, FullName FROM Users NATURAL RIGHT JOIN ClassMembers WHERE ClassID = ?',
+                'SELECT UserID, FullName, Email, DOB, `Permissions` FROM Users NATURAL RIGHT JOIN ClassMembers WHERE ClassID = ?',
+                [ $class ]
+            )->fetchAll();
+
+        }
+
+        function GetPendingInvitesByID($userid) {
+
+            return $this->db->query(
+                'SELECT Invites.*, ClassName, Inviter.FullName as Inviter
+                FROM Invites 
+                LEFT JOIN Users AS Invited ON Invited.Email = Invites.Email
+                LEFT JOIN Users AS Inviter ON Inviter.UserID = Invites.InvitedBy
+                NATURAL LEFT JOIN Classrooms
+                WHERE `Status` = ? AND Invited.UserID = ?',
+                [ 'pending', $userid ]
+            )->fetchAll();
+
+        }
+
+        function GetClassInvites($class) {
+
+            return $this->db->query(
+                'SELECT Invites.*, FullName FROM Invites 
+                LEFT JOIN Users ON Users.UserID = Invites.InvitedBy
+                WHERE Invites.ClassID = ?
+                ORDER BY `Date` DESC',
                 [ $class ]
             )->fetchAll();
 
@@ -392,7 +492,7 @@
         function AddMemberToClass($userid, $classid) {
 
             return $this->db->Insert(
-                'INSERT INTO ClassMembers (ClassID, UserID) VALUES (?,?)',
+                'INSERT INTO ClassMembers (`ClassID`, `UserID`) VALUES (?,?)',
                 [ $classid, $userid ]
             );
 
@@ -495,6 +595,7 @@
                 'INSERT INTO Invites (InviteCode, ClassID, InvitedBy, Email, Date, Status) VALUES (?,?,?,?,NOW(),?)',
                 $data
             );
+            return true;
 
         }
 
@@ -512,6 +613,15 @@
 
         }
 
+        function FindPendingInviteByEmail($classid, $email) {
+
+            return $this->db->query(
+                'SELECT * FROM Invites WHERE Email = ? AND ClassID = ? AND `Status` = ?',
+                [ $email, $classid, 'pending' ]
+            )->fetchAll();
+
+        }
+
         function HandleInviteResponse($code, $accept) {
 
             return $this->db->query(
@@ -526,7 +636,8 @@
 
             $response = [
                 'info' => [],
-                'members' => []
+                'members' => [],
+                'invites' => []
             ];
 
             $info = $this->GetClassInfo($classid);
@@ -534,6 +645,9 @@
 
             $members = $this->GetClassMembers($classid);
             if($members) $response['members'] = $members;
+
+            $invites = $this->GetClassInvites($classid);
+            if($invites) $response['invites'] = $invites;
 
             return $response;
 
@@ -582,6 +696,43 @@
                 WHERE RequestID = ?',
                 [ $requestid ]
             )->fetchAll();
+
+        }
+
+        function Uninvite($inviteid) {
+
+            return $this->db->query(
+                'UPDATE `Invites` SET `Status` = ? WHERE `InviteID` = ?',
+                [ 'canceled', $inviteid ],
+                false
+            );
+
+        }
+
+        function FindInvite($email) {
+
+            return $this->db->query(
+                'SELECT COUNT(InviteID) FROM Invites WHERE Email = ? AND `Date` > (NOW() - INTERVAL 1 DAY)',
+                [ $email ]
+            )->fetchColumn();
+
+        }
+
+        function CreateRequest($classid, $userid, $subject, $description, $deadline) {
+
+            return $this->db->Insert(
+                'INSERT INTO PayRequests (`ClassID`, `RequestedBy`, `Subject`, `Description`, `Date`, `Deadline`) VALUES (?, ?, ?, ?, NOW(), ?)',
+                [ $classid, $userid, $subject, $description, $deadline ]
+            );
+
+        }
+
+        function InsertDebts($data) {
+
+            return $this->db->InsertMultiple(
+                'INSERT INTO UserDebts (RequestID, UserID, RequiredAmount) VALUES (?,?,?)',
+                $data
+            );
 
         }
 

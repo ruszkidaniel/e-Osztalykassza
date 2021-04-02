@@ -13,12 +13,14 @@ class DashboardPage extends BasePage {
         // Load permisisions
 
         $this->managePays = 
-            array_search('MANAGE_MEMBERS', $userPermissions) ||
-            array_search('MODIFY_ALL_CLASSES', $globalPermissions);
-
+            $_SESSION['ClassInfo']['OwnerID'] == $_SESSION['UserID'] ||
+            array_search('MANAGE_PAYS', $userPermissions) !== false ||
+            array_search('MODIFY_ALL_CLASSES', $globalPermissions) !== false;
+            
         $this->manageRequest = 
-            array_search('MANAGE_MEMBERS', $userPermissions) ||
-            array_search('MODIFY_ALL_CLASSES', $globalPermissions);
+            $_SESSION['ClassInfo']['OwnerID'] == $_SESSION['UserID'] ||
+            array_search('MANAGE_REQUESTS', $userPermissions) !== false ||
+            array_search('MODIFY_ALL_CLASSES', $globalPermissions) !== false;
 
         // Parse debts
 
@@ -43,7 +45,7 @@ class DashboardPage extends BasePage {
 
     function managePage($action) {
         switch($action) {
-            case 'pay':
+            case 'pays':
                 if($this->managePays) {
                     $this->loadDebts();
                     return true;
@@ -90,7 +92,7 @@ class DashboardPage extends BasePage {
                 <td class="text-'.($fulfilled?'green':'red').'">'.price_format($debt['Amount']).' Ft</td>
                 <td class="text-'.($fulfilled?'green':'red').'">'.($debt['IsDone']?'igen':'nem').'</td>
                 <td>
-                    <a class="fas fa-pen" href="/request/'.$this->requestID.'/user/'.$debt['UserID'].'/edit" title="Szerkesztés"></a>
+                    <a class="fas fa-edit" href="/request/'.$this->requestID.'/user/'.$debt['UserID'].'/edit" title="Szerkesztés"></a>
                     <a class="fas fa-check-circle" href="/request/'.$this->requestID.'/user/'.$debt['UserID'].'/done" title="Befizette"></a>
                 </td>
             </tr>'.PHP_EOL;
@@ -101,7 +103,7 @@ class DashboardPage extends BasePage {
         $this->setIntro('Információk egy befizetési kérelemről');
         $this->echoHeader();
         echo '
-        <div class="box" id="request">
+        <div class="box" id="dashboard">
             <div class="box">
                 <h2>'.$this->requestData['Subject'].'</h2>
                 <table class="eo-table">
@@ -112,20 +114,34 @@ class DashboardPage extends BasePage {
                         '.$this->requestDOM.'
                     </tbody>
                 </table>
-                <h3>Leírás</h3>
-                <textarea disabled>'.htmlspecialchars($this->requestData['Description']).'</textarea>
+                <div id="top">
+                    <div id="description">
+                        <h3>Leírás</h3>
+                        <textarea disabled>'.htmlspecialchars($this->requestData['Description']).'</textarea>
+                    </div>
+                    <div class="box meta small-width">
+                        <h3><i class="far fa-credit-card text-green"></i> Összeg kiegyenlítése</h3>
+                        <hr>
+                        <div class="center-all">
+                            A befizetés jelenleg csak személyesen történhet meg.
+                        </div>
+                    </div>
+                </div>
             </div>';
 
         if($this->managePays)
-            echo '<a class="btn" href="/request/'.$this->requestID.'/manage/pays">Befizetések kezelése</a>';
+            echo '<a class="btn" href="/request/'.$this->requestID.'/manage/pays"><i class="fas fa-money-bill-wave text-green"></i> Befizetések kezelése</a> ';
         
         if($this->manageRequest)
-            echo '<a class="btn" href="/request/'.$this->requestID.'/manage/request">Kérvény módosítása</a>';
+            echo '<a class="btn" href="/request/'.$this->requestID.'/manage/request"><i class="fas fa-edit text-orange"></i> Kérvény módosítása</a>';
         
         echo '</div>';
     }
 
     private function loadDebts() {
+        $this->setIntro('Befizetett összegek áttekintése és módosítása');
+        $this->echoHeader();
+
         $this->parseDebts();
         
         echo '<div class="box">
@@ -138,7 +154,9 @@ class DashboardPage extends BasePage {
                     '.$this->payDOM.'
                 </tbody>
             </table>
-        </div>';
+            <p class="margin"><a href="/request/'.$this->requestID.'" class="btn">Vissza</a></p>
+        </div>
+        ';
     }
 
 }

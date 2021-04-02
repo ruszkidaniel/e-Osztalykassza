@@ -57,16 +57,29 @@ class MainPage extends BasePage {
             <p>Az osztályát létrehozhatja ezen az oldalon, vagy ha több osztályhoz van hozzáférése, itt kiválaszthatja, hogy melyiket szeretné kezelni éppen.</p>
             <form method="POST" action="/" id="class-select">
                 <label for="class">
-                Osztály kiválasztása:
-                <select name="class" id="class">
-                    '. $this->classDOM .'
-                </select>
-                <input type="submit" value="Kiválaszt">
+                    Osztály kiválasztása:
+                    <select name="class" id="class">
+                        '. $this->classDOM .'
+                    </select>
+                    <input type="submit" value="Kiválaszt">
                 </label>
             </form>
         </div>
-        <hr>
         ';
+        if(isset($_SESSION['PendingInvites']))
+        foreach($_SESSION['PendingInvites'] as $invite) {
+            echo '<div class="box colored fit-content align-center text-center">
+                <h2>Meghívó egy osztályba</h2>
+                <p><span>'.htmlentities($invite['Inviter']).'</span> meghívta Önt a(z) <strong><span>'.htmlentities($invite['ClassName']).'</span></strong> nevű osztályba!</p>
+                <p>A meghívás elfogadásához kattintson az <strong>Elfogadás</strong> gombra.</p>
+                <p>Ha nem szeretne csatlakozni, kattintson az <strong>Elutasítás</strong> gombra.</p>
+                <hr>
+                <div class="flex-spread">
+                    <a href="/invite/deny/'.$invite['InviteCode'].'" class="btn"><span class="text-red">Elutasítás</span></a>
+                    <a href="/invite/accept/'.$invite['InviteCode'].'" class="btn"><span class="text-green">Elfogadás</span></a>
+                </div>
+            </div>';
+        }
     }
 
     private function selectClass($class) {

@@ -336,18 +336,7 @@ Egyelőre ismerkedünk a rendszerrel, kérném szíves türelmüket!"></textarea
         $emails = array_unique(array_filter($_POST['email'], function($email){ return filter_var($email, FILTER_VALIDATE_EMAIL); }));
 
         $url = $this->pageConfig::WEBSITE_ADDRESS;
-        $logo = $this->pageConfig::EMAIL_LOGO;
-
-        $email = '<h3>Tisztelt Cím!</h3>'.PHP_EOL;
-        $email .= '<br>';
-        $email .= '<p>Meghívást kapott az <strong>e-Osztálykassza</strong> szolgáltatásra.</p>';
-        $email .= '<p>A szolgáltatás lényege, hogy az iskolai osztálypénzgyűjtést leegyszerűsítse, és könnyen adminisztrálhatóvá tegye az osztályprogramok szervezéséhez, iskolai ügyek intézéséhez.</p>';
-        $email .= '<p>Amennyiben elfogadja a meghívást, kérjük kattintson az alábbi hivatkozásra, vagy másolja be a böngészője címsorába<br><a href="{{inviteurl}}">{{inviteurl}}</a></p>';
-        $email .= '<br>';
-        $email .= '<p>Ha nem élne a lehetőséggel, kattintson <a href="{{declineurl}}">erre a szövegre</a> a meghívás elutasításához.</p>';
-        $email .= '<p>Ha a továbbiakban nem szeretne meghívást kapni erre az oldalra, <a href="{{optouturl}}">kattintson ide</a>!</p>';
-        $email .= '<br>';
-        $email .= '<img src="'.$logo.'" style="float: left; height: 32px"><span style="font-weight: bold; font-size: 12pt; padding-left: 30px; line-height: 32px;">e-Osztálykassza</span>'.PHP_EOL;
+        $email = $this->pageConfig::INVITE_MAIL_TEMPLATE;
 
         $optoutlist = $this->dataManager->GetUnsubscribedEmails($emails);
 

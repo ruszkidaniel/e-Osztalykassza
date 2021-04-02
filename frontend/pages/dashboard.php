@@ -6,14 +6,20 @@ class DashboardPage extends BasePage {
         if(!isset($_SESSION['ClassInfo']))
             return false;
 
+        // Fetch permissions
+        
+        $this->manageRequests = 
+            $_SESSION['ClassInfo']['OwnerID'] == $_SESSION['UserID'] ||
+            array_search('MANAGE_REQUESTS', $userPermissions) !== false ||
+            array_search('MODIFY_ALL_CLASSES', $globalPermissions) !== false;
+        
         $this->classInfo = $this->dataManager->GetDetailedClassData($_SESSION['ClassInfo']['ClassID']);
         $this->classInfo['AdminFullName'] = '';
 
         // Find admin name among the members
-
         $owner = $this->classInfo['info']['OwnerID'];
         $admin = array_filter($this->classInfo['members'], function($x) use ($owner) { return $x['UserID'] == $owner; });
-        if(count($admin) == 1) $admin = $admin[0]['FullName'];
+        if(count($admin) == 1) $admin = array_values($admin)[0]['FullName'];
         else $admin = 'n/a';
 
         // Set the admin's name
@@ -35,6 +41,9 @@ class DashboardPage extends BasePage {
                 <td class="text-'.($fulfilled ? 'green':'red').'">'.price_format($debt['Amount']).' Ft</td>
                 <td>'.$debt['Deadline'].'</td></tr>';
         }
+
+        // Load admin section
+        $this->LoadAdminSection();
 
         $this->run();
         return true;
@@ -82,8 +91,17 @@ class DashboardPage extends BasePage {
                     </tbody>
                 </table>
             </div>
+            '.$this->adminDOM.'
         </div>
         ';
+    }
+
+    function LoadAdminSection() {
+        $this->adminDOM = '';
+        
+        if($this->manageRequests)
+            $this->adminDOM .= '<a class="btn" href="/createrequest"><i class="fas fa-clipboard-list text-green"></i> Új kérvény</a>';
+        
     }
 
     function IsPaymentFulfilled($debt) {
