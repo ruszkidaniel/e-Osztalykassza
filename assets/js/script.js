@@ -1,5 +1,10 @@
 $(()=>{
-    $(document).on('click','#regbtn',handleRegister);
+    $(document).on('click','#regbtn', handleRegister);
+    $(document).on('change','#mainprice', handlePriceChange);
+
+    function handlePriceChange() {
+        $('.prices').each(x => { $('.prices')[x].value = $('#mainprice').val(); });
+    }
 
     function handleRegister(event) {
         $.post('/api/register', $('form').serialize()).done(parseRegisterCallback);

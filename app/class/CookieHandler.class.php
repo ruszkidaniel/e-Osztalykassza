@@ -16,7 +16,7 @@
                 $this->cookiesAllowed = true;
                 setcookie('cookiesAllowed',time());
                 if(isset($_GET['back']))
-                    die(header('Location: '.$_GET['back']));
+                    die(header('Location: '.($_GET['back'] == '' ? '/' : $_GET['back'])));
             }
         }
 

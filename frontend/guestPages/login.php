@@ -5,7 +5,7 @@ if(isset($_SESSION['REGISTER_DATA']))
 $response = '<p id="response">Jelentkezzen be, ha van már fiókja!</p>';
 if(isset($_SESSION['REGISTER_SUCCESS'])) {
 	unset($_SESSION['REGISTER_SUCCESS']);
-	$response = '<p id="response" class="success">A regisztráció sikeres! Mostmár bejelentkezhet.</p>';
+	$response = '<p id="response" class="success">A regisztráció sikeres! Most már bejelentkezhet.</p>';
 }
 
 if($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -36,11 +36,11 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
 <?=$response?>
 <form action="/" method="POST" autocomplete="off">
 	<label for="username">
-		<i class="fas fa-user"></i> Felhasználónév:
+		<i class="fas fa-user text-orange"></i> Felhasználónév:
 		<input type="text" name="username" id="username" tabindex="1">
 	</label>
 	<label for="password">
-		<i class="fas fa-key"></i> Jelszó: (<a href="/forgotpw" class="forgotpw" tabindex="5">Elfelejtett jelszó?</a>)
+		<i class="fas fa-key text-orange"></i> Jelszó: (<a href="/forgotpw" class="forgotpw" tabindex="5">Elfelejtett jelszó?</a>)
 		<input type="password" name="password" id="password" tabindex="2">
 	</label>
 	<input type="submit" value="Belépés" class="btn" tabindex="3">

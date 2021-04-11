@@ -17,13 +17,15 @@ class CreateRequestPage extends BasePage {
         // Load members table
 
         $this->members = $this->dataManager->GetClassMembers($_SESSION['ClassInfo']['ClassID']);
+        $this->memberData = [];
         $this->membersDOM = '';
         foreach($this->members as $member) {
             $this->membersDOM .= '<tr>
                 <td>'.htmlentities($member['FullName']).'</td>
                 <td>'.$member['DOB'].'</td>
-                <td><input type="number" name="amounts['.$member['UserID'].']" value="'.(isset($_POST['amounts'][$member['UserID']])?$_POST['amounts'][$member['UserID']]:'0').'" class="amount"> Ft</td>
+                <td><input type="number" name="amounts['.$member['UserID'].']" value="'.(isset($_POST['amounts'][$member['UserID']])?$_POST['amounts'][$member['UserID']]:'0').'" class="amount prices"> Ft</td>
             </tr>';
+            $this->memberData[$member['UserID']] = $member;
         }
 
         if($_SERVER['REQUEST_METHOD'] == 'POST')
@@ -39,14 +41,16 @@ class CreateRequestPage extends BasePage {
             return;
         }
 
-        $deadline = isset($_POST['no-deadline']) ? null : $_POST['deadline'];
+        $deadline = isset($_POST['no-deadline']) || strlen($_POST['deadline']) == 0 ? null : $_POST['deadline'];
         $email = !isset($_POST['no-email']);
         $description = trim($_POST['description']);
         $title = trim($_POST['title']);
-        $validAmounts = array_filter($_POST['amounts'], function($am){ return (strlen($am) > 0 && preg_match('/^\d+$/', $am)); }); // need to preserve keys
+        $validAmounts = array_filter($_POST['amounts'], function($am){ return (strlen($am) > 0 && $am > 0 && preg_match('/^\d+$/', $am)); }); // need to preserve keys
+        $classMemberEmails = array_values(array_map(function($member) { return $member['Email']; }, $this->memberData));
+        $optedOutEmails = $this->dataManager->GetUnsubscribedEmails($classMemberEmails);
 
         if(strlen($title) < $this->pageConfig::REQUEST_MIN_TITLE_LENGTH || strlen($title) > $this->pageConfig::REQUEST_MAX_TITLE_LENGTH)
-            $this->error = 'A cím csak '.$this->pageConfig::REQUEST_MIN_TITLE_LENGTH.' és .'.$this->pageConfig::REQUEST_MAX_TITLE_LENGTH.' karakter közötti érték lehet.';
+            $this->error = 'A cím csak '.$this->pageConfig::REQUEST_MIN_TITLE_LENGTH.' és '.$this->pageConfig::REQUEST_MAX_TITLE_LENGTH.' karakter közötti érték lehet.';
         elseif(strlen($description) < $this->pageConfig::REQUEST_MIN_DESCRIPTION_LENGTH || strlen($description) > $this->pageConfig::REQUEST_MAX_DESCRIPTION_LENGTH)
             $this->error = 'A leírás csak '.$this->pageConfig::REQUEST_MIN_DESCRIPTION_LENGTH.' és '.$this->pageConfig::REQUEST_MAX_DESCRIPTION_LENGTH.' karakter közötti érték lehet.';
         elseif(!is_null($deadline) && !strtotime($deadline))
@@ -60,9 +64,30 @@ class CreateRequestPage extends BasePage {
 
         if(isset($this->error)) return;
 
+        $subject = "e-Osztálykassza osztálypénz bekérés";
+
+        $headers = "MIME-Version: 1.0" . "\r\n";
+        $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+        $headers .= 'From: <noreply@'.$this->pageConfig::WEBSITE_DOMAIN.'>' . "\r\n";
+
         $data = [];
         foreach($validAmounts as $user => $amount) {
             $data[] = [$requestID, $user, $amount];
+            if(!$email || !isset($this->memberData[$user])) continue;
+
+            // Check if opted out from mailing
+            $to = $this->memberData[$user]['Email'];
+            if(in_array($to, $optedOutEmails)) continue;
+
+            // Generate message
+            $message = str_replace(
+                ['{{member}}', '{{title}}', '{{price}}', '{{fullname}}', '{{description}}'],
+                [$this->memberData[$user]['FullName'], htmlentities($title), price_format($amount), $_SESSION['FullName'], htmlentities($description)],
+                $this->pageConfig::REQUEST_MAIL_TEMPLATE
+            );
+
+            // Send email
+            mail($to,$subject,$message,$headers);
         }
         $this->dataManager->InsertDebts($data);
         redirect_to_url('/dashboard');
@@ -82,15 +107,15 @@ class CreateRequestPage extends BasePage {
                 <hr>
                 <label for="title">
                     <i class="fas fa-pen-square text-orange"></i> Kérvény címe:
-                    <input type="text" name="title" id="title" value="'.(isset($_POST['title'])?$_POST['title']:'').'" placeholder="pl: Osztálykirándulás Székesfehérvárra" required>
+                    <input type="text" name="title" id="title" value="'.(isset($_POST['title'])?htmlentities($_POST['title']):'').'" placeholder="pl: Osztálykirándulás Székesfehérvárra" required>
                 </label>
-                <label for="amount">
+                <label for="mainprice">
                     <i class="fas fa-money-bill-wave-alt text-orange"></i> Bekért összeg:
-                    <input type="number" name="amount" id="amount" value="'.(isset($_POST['amount'])?$_POST['amount']:'').'" placeholder="pl: 5000" required> Ft
+                    <input type="number" name="amount" id="mainprice" value="'.(isset($_POST['amount'])?htmlentities($_POST['amount']):'').'" placeholder="pl: 5000" required> Ft
                 </label>
                 <label for="deadline">
                     <i class="fas fa-calendar-plus text-orange"></i> Határidő:
-                    <input type="date" name="deadline" min="'.date('Y-m-d').'">
+                    <input type="date" name="deadline" value="'.(isset($_POST['deadline'])?htmlentities($_POST['deadline']):'').'" min="'.date('Y-m-d').'">
                     (<label for="no-deadline">
                         <input type="checkbox" name="no-deadline" value="no-deadline" id="no-deadline"> nincs határidő</small>
                     </label>)
@@ -98,7 +123,7 @@ class CreateRequestPage extends BasePage {
                 <label for="description">
                     <i class="fas fa-book-open text-orange"></i> Leírás:
                     <small>(max 2000 karakter)</small>
-                    <textarea name="description" id="description" value="'.(isset($_POST['description'])?$_POST['description']:'').'" max="2000" required></textarea>
+                    <textarea name="description" id="description" max="2000" required>'.(isset($_POST['description'])?htmlentities($_POST['description']):'').'</textarea>
                 </label>
             </div>
             <div class="box">

@@ -58,4 +58,40 @@
             return $email;
         }
 
+        function HandleLostPassword($username, $email) {
+            $user = $this->dataManager->FindUserByEmailAndUsername($username, $email);
+            if($user === false)
+                throw new Exception('user_not_found');
+
+            $lastRequest = $this->dataManager->FindVerificationCode($user['UserID'], 'password');
+            if($lastRequest !== false) 
+                throw new Exception('already_requested');
+
+            $code = $this->GenerateCode($user['UserID'], 'password');
+            $message = $this->GenerateLostPasswordEmail(htmlentities($user['FullName']), $code);
+            $to = strip_tags($user['FullName']) . " <".$email.">";
+            $subject = "e-Osztálykassza jelszó visszaállítás";
+
+            $headers = "MIME-Version: 1.0" . "\r\n";
+            $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+            $headers .= 'From: <noreply@'.$this->pageConfig::WEBSITE_DOMAIN.'>' . "\r\n";
+
+            mail($to,$subject,$message,$headers);
+        }
+
+        function GenerateLostPasswordEmail($fullName, $verifyCode) {
+            $address = $this->pageConfig::WEBSITE_ADDRESS;
+            $logo = $this->pageConfig::EMAIL_LOGO;
+            $verifyurl = $address . 'forgotpw?code=' . $verifyCode;
+
+            $email = '<h3>Kedves '.$fullName.'!</h3>'.PHP_EOL;
+            $email .= '<p>Ön, vagy valaki az Ön adataival jelszó visszaállítást igényelt az <a href="'.$address.'" style="text-decoration: none; font-weight: bold">e-Osztálykassza</a> oldalon. Amennyiben nem Ön volt, kérjük, hagyja figyelmen kívül ezt a levelet.</p>'.PHP_EOL;
+            $email .= '<p>A jelszava megváltoztatásához <a href="'.$verifyurl.'">kattintson erre a hivatkozásra</a>, majd kövesse a további teendőket.</p>'.PHP_EOL;
+            $email .= '<p>Amennyiben a kattintás nem megoldható, kérjük másolja ki, majd nyissa meg egy új ablakban az alábbi hivatkozást:<br><a href="'.$verifyurl.'">'.$verifyurl.'</a></p>'.PHP_EOL;
+            $email .= '<p>Amennyiben kérdése lenne, bátran forduljon hozzánk valamelyik elérhetőségünkön!</p>'.PHP_EOL;
+
+            $email .= '<img src="'.$logo.'" style="float: left; height: 32px"><span style="font-weight: bold; font-size: 12pt; padding-left: 30px; line-height: 32px;">e-Osztálykassza</span>'.PHP_EOL;
+            return $email;
+        }
+
     }

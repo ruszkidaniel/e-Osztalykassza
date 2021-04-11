@@ -4,7 +4,6 @@
 <ul>
     <li>A regisztrációhoz először egy személyes profil létrehozása szükséges.</li>
     <li>Meglévő osztályhoz csak meghívás útján csatlakozhat.</li>
-    <li>Az oldal kipróbálásához kattintson <a href="/startdemo">erre a szövegre</a>.</li>
     <li>A szolgáltatás díjmentes, azonban bizonyos funkciók csak prémium tagoknak érhetők el.</li>
     <li>A regisztrációhoz és az oldal működéséhez elengedhetetlen a böngészős sütik tárolása.</li>
 </ul>

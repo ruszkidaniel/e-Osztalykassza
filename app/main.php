@@ -46,8 +46,12 @@
 
     if(isset($_SESSION['ClassInfo']['ClassID'], $_SESSION['UserID'])) {
         $inClass = $dataManager->FindUserInClass($_SESSION['ClassInfo']['ClassID'], $_SESSION['UserID']);
-        if($inClass === false)
+        $classInfo = $dataManager->GetClassInfo($_SESSION['ClassInfo']['ClassID']);
+        
+        if($inClass === false || !$classInfo)
             unset($_SESSION['ClassInfo']);
+        else
+            $_SESSION['ClassInfo'] = $classInfo;
     }
 
     // Get invites

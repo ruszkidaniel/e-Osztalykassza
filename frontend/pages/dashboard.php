@@ -7,7 +7,6 @@ class DashboardPage extends BasePage {
             return false;
 
         // Fetch permissions
-        
         $this->manageRequests = 
             $_SESSION['ClassInfo']['OwnerID'] == $_SESSION['UserID'] ||
             array_search('MANAGE_REQUESTS', $userPermissions) !== false ||
@@ -29,7 +28,7 @@ class DashboardPage extends BasePage {
         // Get user debts
         $this->debts = $this->dataManager->GetUserDebts($_SESSION['ClassInfo']['ClassID'], $_SESSION['UserID']);
         $this->unfulfilledPayments = count($this->debts) - count(array_filter($this->debts, [$this, 'IsPaymentFulfilled']));
-
+        
         // Generated table DOM
         $this->debtDOM = '';
         foreach($this->debts as $debt) {
@@ -39,7 +38,8 @@ class DashboardPage extends BasePage {
                 <td><a href="/request/'.$debt['RequestID'].'">'.$debt['Subject'].'</a></td>
                 <td>'.price_format($debt['RequiredAmount']).' Ft</td>
                 <td class="text-'.($fulfilled ? 'green':'red').'">'.price_format($debt['Amount']).' Ft</td>
-                <td>'.$debt['Deadline'].'</td></tr>';
+                <td><span>'.$debt['Deadline'].'</span></td>
+            </tr>'.PHP_EOL;
         }
 
         // Load admin section
@@ -80,11 +80,11 @@ class DashboardPage extends BasePage {
                 </div>
             </div>
             <hr>
-            <div class="box">
+            <div class="box eo-table-wrapper">
                 <h2>Befizetési kérelmek <small>('.count($this->debts).' darab)</small></h2>
                 <table class="eo-table">
                     <thead>
-                        <tr><th>Megnevezés</th><th>Szükséges pénzösszeg</th><th>Teljesített összeg</th><th>Határidő</th></tr>
+                        <tr><th>Megnevezés</th><th></th><th>Teljesített összeg</th><th>Határidő</th></tr>
                     </thead>
                     <tbody>
                         '.$this->debtDOM.'
@@ -98,10 +98,44 @@ class DashboardPage extends BasePage {
 
     function LoadAdminSection() {
         $this->adminDOM = '';
+        if(!$this->manageRequests) return;
         
-        if($this->manageRequests)
-            $this->adminDOM .= '<a class="btn" href="/createrequest"><i class="fas fa-clipboard-list text-green"></i> Új kérvény</a>';
+        // Filter own debt ids
+        $ownRequests = array_column($this->debts, 'RequestID');
         
+        // Get all pay requests in class
+        $this->payRequests = $this->dataManager->GetPayRequests($_SESSION['ClassInfo']['ClassID']);
+        $this->payRequests = array_filter($this->payRequests, function($request) use ($ownRequests) {
+            return array_search($request['RequestID'], $ownRequests) === false;
+        });
+        
+        $this->adminDOM = '
+        <div class="box">
+            <h2>További kérelmek <small>('.count($this->payRequests).' darab)</small></h2>
+            <div class="eo-table-wrapper">
+            <table class="eo-table">
+                <thead>
+                    <tr><th>Megnevezés</th><th>Bekérések száma</th><th>Határidő</th></tr>
+                </thead>
+                <tbody>';
+                
+                foreach($this->payRequests as $request) {
+                    $deadline = is_null($request['Deadline']) ? 'nincs' : $request['Deadline'];
+                    $this->adminDOM .= '<tr>
+                        <td><a href="/request/'.$request['RequestID'].'">'.htmlentities($request['Subject']).'</a></td>
+                        <td><span>'.$request['RequestedUsers'].'</span> fő</td>
+                        <td>'.$deadline.'</td>
+                    </tr>';
+                }
+                
+                $this->adminDOM .= '
+                </tbody>
+            </table>
+            </div>
+        </div>';
+        
+        
+        $this->adminDOM .= '<a class="btn" href="/createrequest"><i class="fas fa-clipboard-list text-green"></i> Új kérvény</a>';
     }
 
     function IsPaymentFulfilled($debt) {

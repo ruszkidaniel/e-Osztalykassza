@@ -1,8 +1,5 @@
 <?php
 
-    /**
-     * This class represents an user of this site.
-     */
     class User {
 
         function __construct($pageConfig, $dataManager, $cookieHandler) {
@@ -132,6 +129,7 @@
             return [
                 'UserID' => $loginData['UserID'],
                 'UserName' => $username,
+                'FullName' => $loginData['FullName'],
                 'GlobalPermissions' => $loginData['GlobalPermissions'],
                 '2FA' => $loginData['2FA'],
                 '2FAType' => $loginData['2FAType']

@@ -71,6 +71,14 @@ class InviteManager {
         <p class="text-center">Ezt a meghívót már valaki felhasználta! Kérjen újbóli meghívást az osztály készítőjétől.</p>';
     }
 
+    function optOut() {
+        if($this->inviteData != false)
+            $this->dataManager->UnsubscribeEmail($this->inviteData['Email']);
+        return '<h2 class="align-center text-center">Sikeres leiratkozás!</h2>
+        <hr>
+        <p class="text-center">Mostantól nem fogunk több levelet küldeni erre az email címre.</p>';
+    }
+
 }
 
 ?>

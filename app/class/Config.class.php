@@ -1,16 +1,18 @@
 <?php
 
     class Config {
-        const WEBSITE_DOMAIN = 'local.blckdg.me';
-        const WEBSITE_ADDRESS = 'https://local.blckdg.me/';
+        const WEBSITE_DOMAIN = 'eosztalykassza.szakdolgozat.net';
+        const WEBSITE_ADDRESS = 'http://eosztalykassza.szakdolgozat.net/';
 
-        const FB_APP_ID = '2818937918318854';
-        const FB_APP_VERSION = 'v10.0';
+        const PAGE_SECRET = 'XHvLM1rR3kEh9zXjiqO0M90JiZZN2ago';
+
+        const FB_APP_ID = '';
+        const FB_APP_VERSION = '';
 
         const REG_USERNAME_REGEX = '/^[a-z0-9 öüóőúűéáí._:,]+$/';
         const REG_FULLNAME_REGEX = '/^[a-z0-9 öüóőúűéáí]+$/';
 
-        const REG_USERNAME_MIN = 6;
+        const REG_USERNAME_MIN = 4;
         const REG_USERNAME_MAX = 32;
 
         const REG_PASSWORD_MIN = 6;
@@ -34,8 +36,7 @@
         
         const CLASS_PERMISSIONS = [
             'MANAGE_MEMBERS', 'MANAGE_PAYS',
-            'MANAGE_SETTINGS', 'MANAGE_PERMISSIONS', 'MANAGE_REQUESTS',
-            'MANAGE_POSTS'
+            'MANAGE_SETTINGS', 'MANAGE_PERMISSIONS', 'MANAGE_REQUESTS'
         ];
 
         const GLOBAL_PERMISSIONS = [
@@ -44,13 +45,29 @@
         ];
 
         const INVITE_MAIL_TEMPLATE = '<h3>Tisztelt Cím!</h3>
-        <br>
         <p>Meghívást kapott az <strong>e-Osztálykassza</strong> szolgáltatásra.</p>
         <p>A szolgáltatás lényege, hogy az iskolai osztálypénzgyűjtést leegyszerűsítse, és könnyen adminisztrálhatóvá tegye az osztályprogramok szervezéséhez, iskolai ügyek intézéséhez.</p>
         <p>Amennyiben elfogadja a meghívást, kérjük kattintson az alábbi hivatkozásra, vagy másolja be a böngészője címsorába<br><a href="{{inviteurl}}">{{inviteurl}}</a></p>
         <br>
         <p>Ha nem élne a lehetőséggel, kattintson <a href="{{declineurl}}">erre a szövegre</a> a meghívás elutasításához.</p>
         <p>Ha a továbbiakban nem szeretne meghívást kapni erre az oldalra, <a href="{{optouturl}}">kattintson ide</a>!</p>
+        <br>
+        <img src="'.Config::EMAIL_LOGO.'" style="float: left; height: 32px"><span style="font-weight: bold; font-size: 12pt; padding-left: 30px; line-height: 32px;">e-Osztálykassza</span>';
+        
+        const REQUEST_MAIL_TEMPLATE = '<h3>Tisztelt {{member}}!</h3>
+        <p>
+            Az e-Osztálykassza szolgáltatáson új osztálypénz befizetési kérelmet tettek közzé.<br>
+            Kérjük, hogy tekintse meg a kérelmet!
+        </p>
+        <hr>
+        <h3>Kérelem adatai:</h3>
+        <ul>
+            <li>Bekérés megnevezése: <strong>{{title}}</strong></li>
+            <li>Bekért összeg: <strong>{{price}} Ft</strong></li>
+            <li>Bekérő neve: <strong>{{fullname}}</strong></li>
+            <li>Leírás: <br>
+            {{description}}</li>
+        </ul>
         <br>
         <img src="'.Config::EMAIL_LOGO.'" style="float: left; height: 32px"><span style="font-weight: bold; font-size: 12pt; padding-left: 30px; line-height: 32px;">e-Osztálykassza</span>';
     }

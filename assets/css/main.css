@@ -186,6 +186,17 @@ p.intro {
   flex-direction: column;
 }
 
+a.box-sm {
+  background-color: rgba(0,0,0,.4);
+  padding: 5px;
+  border-radius: 5px;
+  box-shadow: #000 1px 1px 5px;
+  text-decoration: none;
+}
+a.box-sm:hover {
+  background-color: rgba(0,0,0,0.6);
+}
+
 .box {
   background-color: rgba(0,0,0,.4);
   padding: 20px;
@@ -200,6 +211,7 @@ p.intro {
 .box.colored:hover {
   background-color: rgba(0,0,150,.4);
 }
+.box ol,
 .box ul {
   padding-left: 30px;
 }
@@ -226,6 +238,12 @@ main hr {
 
 .fit-content {
   width: fit-content;
+}
+.full-width {
+  width: 100%;
+}
+div.margin {
+  margin: 10px;
 }
 
 .align-center {
@@ -264,6 +282,7 @@ p.info {
 }
 .box input,
 .box textarea,
+.box button,
 .box select {
   padding: 10px;
   background-color: rgba(0, 0, 0, 0.3);
@@ -271,13 +290,16 @@ p.info {
   border: 1px solid #222;
   border-radius: 5px;
 }
+.box button,
 .box input {
   font-weight: bold;
   color: #fff;
   background-color: rgba(255,255,255,0.1);
 }
+.box button[type="submit"]:hover,
 .box input[type="submit"]:hover {
   background-color: rgba(255,255,255,0.3);
+  cursor: pointer;
 }
 .box select optgroup,
 .box select option {
@@ -422,6 +444,10 @@ p.info {
 .text-orange { color: #fa0; }
 a.btn i { font-size: 12pt; }
 
+
+.eo-table-wrapper {
+  overflow: auto;
+}
 .eo-table {
   width: 100%;
   border-collapse: collapse;
@@ -454,6 +480,12 @@ input#title {
 #createrequest label {
   font-weight: bold;
 }
+#debts-info .eo-table tbody tr td a.box-sm {
+  visibility: hidden;
+}
+#debts-info .eo-table tbody tr td:hover > a.box-sm {
+  visibility: visible;
+}
 
 /* dashboard end */
 
@@ -461,12 +493,18 @@ input#title {
   max-height: 25vh;
   overflow: auto;
 }
+.small-height .eo-table thead tr th {
+  position: sticky;
+  top: -1px;
+  background-color: #242C33;
+} 
 
 input.large-input {
   width: 100%;
 }
 
 h2 span,
+li span,
 td span,
 p span {
   color: #FA0;
@@ -480,4 +518,56 @@ p span {
 
 .clear { clear: both; }
 
-/*# sourceMappingURL=main.css.map */
+@media (max-width: 1366px) {
+  div#container {
+    flex-direction: column;
+  }
+  div#sidebar {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  #dashboard #top {
+    flex-direction: column;
+  }
+  
+  div#container {
+    display: block;
+  }
+  main {
+    padding: 0;
+    margin: 1em 0 0 0;
+  }
+  div#dashboard a.btn {
+    display: block;
+    width: fit-content;
+    margin: 5px auto;
+  }
+}
+
+@media (max-width: 600px) {
+  div#sidebar nav {
+    width: auto;
+  }
+  .flex {
+    flex-direction: column;
+  }
+}
+
+@media (max-height: 900px) {
+  div.cookiebox {
+    position: static;
+  }
+  .guest-wrapper {
+    display: block;
+  }
+  .guest-container {
+    margin: 2em auto;
+  }
+  .small-width { /* nope. */
+    max-width: 100%;
+  }
+}
