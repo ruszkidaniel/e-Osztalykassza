@@ -44,6 +44,8 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
 		<input type="password" name="password" id="password" tabindex="2">
 	</label>
 	<input type="submit" value="Belépés" class="btn" tabindex="3">
+	
+	<?php if(strlen($pageConfig::FB_APP_ID) > 0): ?>
 	<p class="text-center">
 		Belépés Facebookkal:
 		<fb:login-button 
@@ -51,6 +53,8 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
 		onlogin="checkLoginState();">
 		</fb:login-button>
 	</p>
+	<?php endif; ?>
+	
 	<p class="text-center">
 		<a href="/register" class="btn" tabindex="4">Regisztráció</a>
 	</p>

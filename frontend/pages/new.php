@@ -14,8 +14,7 @@ class NewClassPage extends BasePage {
 
         $this->classes = $this->dataManager->GetUserOwnedClasses($_SESSION['UserID']);
 
-        // TODO: remove test
-        if(false && count($this->classes) > 0) {
+        if(count($this->classes) > 0) {
             // PREMIUM: users who bought premium features should be allowed to make more than 1 classes
             $this->alreadyOwnAClass();
             return true;
