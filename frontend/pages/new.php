@@ -14,14 +14,15 @@ class NewClassPage extends BasePage {
 
         $this->classes = $this->dataManager->GetUserOwnedClasses($_SESSION['UserID']);
 
-        if(count($this->classes) > 0) {
-            // PREMIUM: users who bought premium features should be allowed to make more than 1 classes
-            $this->alreadyOwnAClass();
-            return true;
-        }
-
-        if(!isset($_SESSION['NewClass']))
+        if(!isset($_SESSION['NewClass'])) {
+            
+            if(count($this->classes) > 0) {
+                // PREMIUM: users who bought premium features should be allowed to make more than 1 classes
+                $this->alreadyOwnAClass();
+                return true;
+            }
             $_SESSION['NewClass'] = 0;
+        }
 
         $this->run();
         return true;
@@ -298,7 +299,7 @@ Egyelőre ismerkedünk a rendszerrel, kérném szíves türelmüket!"></textarea
         </div>';
 
         $len = 0;
-        $deleteDOM = '<input type="submit" name="delete" value="X">';
+        $deleteDOM = '<button type="submit" name="delete"><i class="fas fa-trash text-red"></i></button>';
         if(isset($_SESSION['ClassGroups'])) {
             for($i = 0; $i < min(3, count($_SESSION['ClassGroups'])); $i++) {
                 $group = $_SESSION['ClassGroups'][$i];

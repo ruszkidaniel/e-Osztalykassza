@@ -811,7 +811,7 @@
                 false
             );
             
-            return $result && $this->db->query(
+            return $result && $result2 && $this->db->query(
                 'DELETE FROM ClassGroups WHERE ClassID = ?',
                 [ $classid ],
                 false
@@ -1391,6 +1391,22 @@
             return $this->db->query(
                 'UPDATE Classrooms SET ClassName = ?, MaxMembers = ? WHERE ClassID = ?',
                 [ $classname, $maxmembers, $classid ],
+                false
+            );
+
+        }
+
+        /**
+         * @param int $classid
+         * @param string $description
+         * 
+         * @return boolean
+         */
+        function UpdateClassDescription($classid, $description) {
+            
+            return $this->db->query(
+                'UPDATE Classrooms SET `Description` = ? WHERE ClassID = ?',
+                [ $description, $classid ],
                 false
             );
 

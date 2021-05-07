@@ -118,7 +118,7 @@ class ProfilePage extends BasePage {
                 
             echo '<div class="flex-spread">
                     <a href="/profile/'.$this->targetUser.'" class="btn"><i class="fas fa-chevron-circle-left text-red"></i> Vissza</a>
-                    <button type="submit"><i class="fas fa-save text-green"></i> Kérelem elküldése</button>
+                    <button type="submit"><i class="fas fa-save text-green"></i> Alkalmazás</button>
                 </div>
             </div>
         </form>';
@@ -209,7 +209,7 @@ class ProfilePage extends BasePage {
                 </div>
             </div>
             <div class="text-center flex-spread">
-                <a href="/profile/'.$this->targetUser.'/2fa" class="btn"><i class="fas fa-mobile-alt text-green"></i> Két faktoros hitelesítés</a>
+                <a href="/profile/'.$this->targetUser.'/2fa" class="btn"><i class="fas fa-mobile-alt text-green"></i> Kétfaktoros hitelesítés</a>
                 <a href="/profile/'.$this->targetUser.'/changepassword" class="btn"><i class="fas fa-key text-orange"></i> Jelszó módosítása</a>
             </div>
         </div>';

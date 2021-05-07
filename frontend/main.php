@@ -18,10 +18,6 @@
 
 <?php
 
-        // load sidebar
-
-        require_once('./frontend/sidebar.php');
-
         // check if page exists
         $page = count($path) == 0 ? 'main' : $path[0];
         $file = './frontend/pages/'.$page.'.php';

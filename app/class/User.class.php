@@ -90,6 +90,7 @@
                 throw new Exception('wrong_2fa_code');
 
             $this->dataManager->SetDOB($registerData['UserID'], $_POST['dob']);
+            $this->dataManager->SetUser2FA($registerData['UserID'], null, $postData['2fa']);
             $this->dataManager->SetGlobalPermissions($registerData['UserID'], 1);
 
             if(isset($postData['dobhidden']))

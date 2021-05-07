@@ -34,11 +34,59 @@ class SettingsPage extends BasePage {
             $this->parseSettings();
         }
 
+        // Parse URL
+
+        if(in_array('delete', $this->path))
+            return $this->deleteClass();
+        elseif(in_array('description', $this->path))
+            return $this->modifyDescription();
+        
         $this->run();
         return true;
     }
 
-    function parseSettings() {
+    private function modifyDescription() {
+        $this->setIntro('Osztály leírásának módosítása');
+        $this->echoHeader();
+
+        echo '<div class="box">
+        <form method="POST" action="/settings/description" class="box">
+            <h2>Leírás módosítása</h2>
+            <hr>
+            <p>Ha frissíteni szeretné a mindenkinek megjelenő leírást, változtassa meg itt, és kattintson a mentés gombra!</p>
+            <label for="description">Új leírás:
+            <textarea name="description" id="description">'.htmlentities($this->classInfo['info']['Description']).'</textarea>
+            </label>
+            <input type="submit" value="Mentés">
+        </form>
+        <a href="/settings" class="btn"><i class="fas fa-arrow-circle-left text-orange"></i> Vissza</a>
+        </div>';
+        return true;
+    }
+
+    private function deleteClass() {
+
+        if(!$this->isOwner) return false;
+        $this->setIntro('Osztály törlése');
+        $this->echoHeader();
+        $_SESSION['csrf'] = random_characters(22);
+
+        echo '<div class="box">
+        <form method="POST" action="/settings" class="box fit-content">
+            <h2>Osztály végleges törlése</h2>
+            <hr>
+            <p>Biztos, hogy törölni szeretné az osztályát?</p>
+            <p class="margin"><strong class="text-red"><i class="fas fa-exclamation-triangle"></i> FIGYELEM!</strong> Ez a lépés nem vonható vissza! Minden befizetés és egyéb adat törlődni fog.</p>
+            <input type="hidden" name="csrf" value="'.$_SESSION['csrf'].'">
+            <p><button type="submit" name="deleteclass"> Igen, biztosan törölni szeretném az osztályt</button></p>
+        </form>
+        <a href="/settings" class="btn"><i class="fas fa-arrow-circle-left text-orange"></i> Vissza</a>
+        </div>';
+
+        return true;
+    }
+
+    private function parseSettings() {
         if(isset($_POST['className'], $_POST['maxMembers'])) {
             if(strlen($_POST['className']) < 3 || strlen($_POST['className']) > 16) return;
             $maxMembers = $this->classInfo['info']['MaxMembers'];
@@ -52,6 +100,20 @@ class SettingsPage extends BasePage {
             if(!$this->isOwner) return;
 
             $this->dataManager->UpdateClassOwner($_SESSION['ClassInfo']['ClassID'], $_POST['newAdmin']);
+        }
+        elseif(isset($_POST['csrf'], $_POST['deleteclass'])) {
+            if(!$this->isOwner) return;
+
+            $this->dataManager->DeleteClass($this->classInfo['info']['ClassID']);
+            redirect_to_url('/');
+            return;
+        }
+        elseif(isset($_POST['description'])) {
+            $description = trim(substr($_POST['description'], 0, 2000));
+
+            $this->dataManager->UpdateClassDescription($this->classInfo['info']['ClassID'], $description);
+            $this->classInfo['info']['Description'] = $description;
+            return;
         }
         redirect_to_url('/settings');
     }
@@ -76,6 +138,7 @@ class SettingsPage extends BasePage {
             </label>
             <input type="submit" value="Mentés">
         </form>
+            
         <form method="POST" action="/settings" class="box fit-content align-center text-center">
             <h2>Adminisztrátori jogosultság átruházása</h2>
             <hr>
@@ -95,9 +158,11 @@ class SettingsPage extends BasePage {
             <p><input type="submit" value="Jogosultságok átadása"></p>';
 
         echo '</form>
-        </div>
-        </div>
-        ';
+        </div>';
+        if($this->isOwner)
+            echo '<a href="/settings/delete" class="btn"><i class="fas fa-trash text-red"></i> Osztály törlése</a> ';
+        echo '<a href="/settings/description" class="btn"><i class="fas fa-clipboard text-orange"></i> Leírás módosítása</a>
+        </div>';
     }
 
 }

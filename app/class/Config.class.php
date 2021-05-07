@@ -4,7 +4,7 @@
         const WEBSITE_DOMAIN = 'eosztalykassza.szakdolgozat.net';
         const WEBSITE_ADDRESS = 'http://eosztalykassza.szakdolgozat.net/';
 
-        const PAGE_SECRET = 'XHvLM1rR3kEh9zXjiqO0M90JiZZN2ago';
+        const PAGE_SECRET = '';
 
         const FB_APP_ID = '';
         const FB_APP_VERSION = '';

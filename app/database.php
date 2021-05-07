@@ -1,9 +1,9 @@
 <?php
 
-    $host = '';
+    $host = 'localhost';
     $user = '';
     $pass = '';
-    $dbname = '';
+    $dbname = 'eosztalykassza';
 
     try {
         $db = new Database($host, $user, $pass, $dbname);

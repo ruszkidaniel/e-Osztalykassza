@@ -558,9 +558,6 @@ p span {
 }
 
 @media (max-height: 900px) {
-  div.cookiebox {
-    position: static;
-  }
   .guest-wrapper {
     display: block;
   }
@@ -571,3 +568,5 @@ p span {
     max-width: 100%;
   }
 }
+
+/*# sourceMappingURL=main.css.map */
